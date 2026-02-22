@@ -3,35 +3,17 @@ const Project = require("../models/Project");
 const User = require("../models/User");
 const { evaluateProject } = require("../services/aiService");
 const { calculateFinalScore } = require("../utils/scoreCalculator");
-const { v4: uuidv4 } = require("uuid");
+const { sendUpgradeNudgeEmail } = require("../services/emailService");
 
 const GITHUB_URL_REGEX = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/;
 
 // ── POST /api/projects ────────────────────────────────────────────────────────
+// Note: planGate middleware runs before this handler — it enforces usage limits
 exports.createProject = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
-        }
-
-        // ── Phase 3: Evaluation limit gate ───────────────────────────────────
-        const user = await User.findById(req.user._id);
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        const limitReached =
-            user.evaluationsLimit !== -1 &&
-            user.evaluationsUsed >= user.evaluationsLimit;
-
-        if (limitReached) {
-            return res.status(403).json({
-                success: false,
-                code: "EVAL_LIMIT_REACHED",
-                message: `You have used all ${user.evaluationsLimit} evaluations on the Free plan.`,
-                evaluationsUsed: user.evaluationsUsed,
-                evaluationsLimit: user.evaluationsLimit,
-                plan: user.plan,
-            });
         }
 
         const { title, githubUrl, description, techStack } = req.body;
@@ -65,10 +47,23 @@ exports.createProject = async (req, res, next) => {
 
         // Increment evaluationsUsed only on successful evaluation
         if (status === "evaluated") {
-            await User.findByIdAndUpdate(req.user._id, { $inc: { evaluationsUsed: 1 } });
+            const updatedUser = await User.findByIdAndUpdate(
+                req.user._id,
+                { $inc: { evaluationsUsed: 1 } },
+                { new: true }
+            ).select("evaluationsUsed evaluationsLimit plan email name");
+
+            // Nudge email when hitting 2/3 free evaluations (fire-and-forget)
+            if (
+                updatedUser &&
+                updatedUser.plan === "free" &&
+                updatedUser.evaluationsUsed >= updatedUser.evaluationsLimit - 1
+            ) {
+                sendUpgradeNudgeEmail(updatedUser).catch(() => { });
+            }
         }
 
-        // Return structured 422 when evaluation failed so the frontend can show a clear message
+        // Return structured 422 when evaluation failed
         if (status === "failed") {
             console.warn("[projectController] ⚠️  Returning 422 — evaluation failed for project:", project._id.toString());
             return res.status(422).json({
@@ -147,55 +142,5 @@ exports.getProjectById = async (req, res, next) => {
     }
 };
 
-// ── POST /api/projects/:id/certify ────────────────────────────────────────────
-exports.certifyProject = async (req, res, next) => {
-    try {
-        const project = await Project.findById(req.params.id);
-
-        if (!project) return res.status(404).json({ message: "Project not found" });
-        if (project.user.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: "Access denied" });
-        }
-        if (project.status !== "evaluated") {
-            return res.status(400).json({ message: "Only evaluated projects can be certified." });
-        }
-
-        // Idempotent: if already certified, return existing ID
-        if (project.certificationId) {
-            return res.json({ certificationId: project.certificationId });
-        }
-
-        project.certificationId = `SP-${uuidv4().slice(0, 8).toUpperCase()}`;
-        await project.save();
-
-        res.json({ certificationId: project.certificationId });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// ── GET /api/cert/:certId (public) ────────────────────────────────────────────
-exports.getPublicCert = async (req, res, next) => {
-    try {
-        const project = await Project.findOne({ certificationId: req.params.certId })
-            .select("title finalScore evaluation techStack certificationId createdAt user status");
-
-        if (!project) return res.status(404).json({ message: "Certificate not found" });
-
-        const user = await User.findById(project.user).select("name publicProfileSlug");
-
-        res.json({
-            certificationId: project.certificationId,
-            developerName: user?.name ?? "Anonymous Developer",
-            publicProfileSlug: user?.publicProfileSlug ?? null,
-            projectTitle: project.title,
-            finalScore: project.finalScore,
-            techStack: project.techStack,
-            skillTags: project.evaluation?.skillTags ?? [],
-            companyFit: project.evaluation?.companyFit ?? null,
-            issuedAt: project.createdAt,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
+// certifyProject, getPublicCert, verifyCert, getCertPDF, getCertBadge
+// → moved to certController.js for separation of concerns

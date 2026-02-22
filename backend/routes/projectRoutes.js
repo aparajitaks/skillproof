@@ -1,13 +1,13 @@
 const express = require("express");
 const { body } = require("express-validator");
 const { protect } = require("../middleware/authMiddleware");
+const planGate = require("../middleware/planGate");
 const {
     createProject,
     getMyProjects,
     getProjectById,
-    certifyProject,
-    getPublicCert,
 } = require("../controllers/projectController");
+const { certifyProject } = require("../controllers/certController");
 
 const router = express.Router();
 
@@ -41,14 +41,12 @@ const projectValidation = [
         .withMessage("techStack must be an array of strings"),
 ];
 
-router.post("/", protect, projectValidation, createProject);
+// planGate enforces free-tier limits + monthly reset before hitting AI evaluation
+router.post("/", protect, planGate, projectValidation, createProject);
 router.get("/", protect, getMyProjects);
 router.get("/:id", protect, getProjectById);
 
-// Phase 3: certification
+// Certify an evaluated project (creates Certificate document + HMAC signature)
 router.post("/:id/certify", protect, certifyProject);
-
-// Phase 3: public cert lookup (no auth)
-router.get("/cert/:certId", getPublicCert);
 
 module.exports = router;
