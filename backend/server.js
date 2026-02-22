@@ -117,15 +117,19 @@ const server = app.listen(PORT, () => {
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
 const shutdown = (signal) => {
   logger.info(`${signal} received. Shutting down gracefully...`);
+
   server.close(async () => {
     try {
-      await mongoose.connection.close();
-      logger.info("MongoDB connection closed.");
+      if (mongoose.connection.readyState === 1) {
+        await mongoose.connection.close();
+        logger.info("MongoDB connection closed.");
+      }
     } catch (err) {
-      logger.error("Error closing MongoDB connection:", err);
+      logger.error({ err }, "Error closing MongoDB connection");
     }
     process.exit(0);
   });
+
   // Force exit after 10s if graceful shutdown fails
   setTimeout(() => {
     logger.error("Graceful shutdown timed out. Forcing exit.");
@@ -135,3 +139,14 @@ const shutdown = (signal) => {
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+
+// Uncaught exceptions & promise rejections
+process.on("uncaughtException", (err) => {
+  logger.error({ err }, "Uncaught Exception");
+  shutdown("UNCAUGHT_EXCEPTION");
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error({ reason, promise }, "Unhandled Rejection");
+  shutdown("UNHANDLED_REJECTION");
+});

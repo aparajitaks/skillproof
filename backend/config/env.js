@@ -1,30 +1,33 @@
-/**
- * Environment variable validator — called at boot.
- * Throws immediately if any required variable is missing so the server
- * fails fast with a clear error rather than crashing silently later.
- */
+const { z } = require("zod");
+const logger = require("../utils/logger");
 
-const REQUIRED_VARS = [
-    "MONGO_URI",
-    "JWT_SECRET",
-    "GROQ_API_KEY",
-];
+const envSchema = z.object({
+    NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    PORT: z.string().default("5001"),
+    MONGO_URI: z.string().min(1, "MONGO_URI is required"),
+    JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
+    GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required"),
+    OPENAI_API_KEY: z.string().optional(), // In case of multi-model logic later
+    CORS_ORIGIN: z.string().optional(),
+});
 
 function validateEnv() {
-    const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
-    if (missing.length > 0) {
-        console.error(
-            `\n[env] ❌ Missing required environment variables:\n  ${missing.join("\n  ")}\n\nCopy .env.example to .env and fill in the values.\n`
-        );
+    try {
+        const envVars = envSchema.parse(process.env);
+
+        if (envVars.NODE_ENV === "production" && envVars.JWT_SECRET === "change_this_in_production") {
+            logger.warn("[env] ⚠️ JWT_SECRET is using the default placeholder in production!");
+        }
+
+        logger.info("[env] ✅ Environment variables validated successfully.");
+        return envVars;
+    } catch (error) {
+        console.error("[env] ❌ Environment validation failed:");
+        error.errors.forEach((err) => {
+            console.error(`  - ${err.path.join(".")}: ${err.message}`);
+        });
         process.exit(1);
     }
-
-    // Warn about placeholder values
-    if (process.env.JWT_SECRET === "change_this_in_production") {
-        console.warn("[env] ⚠️  JWT_SECRET is using the default placeholder — change it in production!");
-    }
-
-    console.log("[env] ✅ All required environment variables present");
 }
 
 module.exports = { validateEnv };
