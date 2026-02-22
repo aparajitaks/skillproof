@@ -1,13 +1,19 @@
 const Groq = require("groq-sdk");
+const logger = require("../utils/logger");
 
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const TIMEOUT_MS = 30_000;
+
+// ── Versioning — increment PROMPT_VERSION when prompt changes ─────────────────
+// This is stored on every evaluation for reproducibility + debugging
 const AI_MODEL = "llama-3.3-70b-versatile";
 const AI_TEMPERATURE = 0.2;
+const PROMPT_VERSION = "v2.1";
+
 const FORCE_FAILURE = process.env.SIMULATE_AI_FAILURE === "true";
 
-// ── Phase 2: adds companyFit to 5-dimension evaluation ───────────────────────
+// ── System prompt ─────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `
 You are a senior software engineering evaluator for a developer career intelligence platform.
 
@@ -20,6 +26,7 @@ Evaluate the submitted project and return ONLY a valid JSON object with EXACTLY 
   "innovationScore": <integer 1-10>,
   "realWorldImpactScore": <integer 1-10>,
   "complexity": <integer 1-10>,
+  "confidenceScore": <integer 0-100>,
   "skillTags": ["tag1", "tag2", "tag3"],
   "strengths": ["one genuine strength", "another strength"],
   "weaknesses": ["one genuine weakness", "another weakness"],
@@ -47,11 +54,12 @@ Dimension definitions:
 - scalabilityScore: ability to handle growth, stateless design, DB indexing
 - innovationScore: creative use of technology, novel solutions, originality
 - realWorldImpactScore: solves a real problem, has users, production potential
+- confidenceScore: your confidence (0–100) in the accuracy of this evaluation given the info provided
 
 Company-fit scoring:
-- google: Does this project demonstrate algorithmic thinking, large-scale systems design, and rigorous code quality? High score = would impress Google interviewers.
-- startup: Is this project fast to ship, pragmatic, user-focused, and MVP-minded? High score = startup CTO would hire for this.
-- mnc: Does this project follow enterprise patterns, documentation, security, and maintainability standards? High score = fits Fortune 500 codebases.
+- google: algorithmic thinking, large-scale systems design, rigorous code quality
+- startup: fast to ship, pragmatic, user-focused, MVP-minded
+- mnc: enterprise patterns, documentation, security, maintainability standards
 
 Rules:
 - resumeBullets must be copy-paste ready for LinkedIn or a resume. No placeholders.
@@ -66,6 +74,7 @@ const FALLBACK_EVALUATION = {
     innovationScore: 0,
     realWorldImpactScore: 0,
     complexity: 0,
+    confidenceScore: 0,
     skillTags: [],
     strengths: [],
     weaknesses: [],
@@ -73,28 +82,30 @@ const FALLBACK_EVALUATION = {
     resumeBullets: [],
     nextLearningPath: [],
     companyFit: { google: 0, startup: 0, mnc: 0 },
+    // Metadata
+    aiModelVersion: AI_MODEL,
+    promptVersion: PROMPT_VERSION,
+    tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    fallback: true,
 };
 
 /**
- * Calls Groq to evaluate a project across 5 dimensions + company-fit.
+ * Calls Groq to evaluate a project across 5 dimensions + company-fit + confidence.
  * Always returns a value — never throws.
+ * Returns token usage for cost tracking.
  */
 const evaluateProject = async ({ title, description, techStack, githubUrl }) => {
-    console.log("[aiService] evaluateProject called:", {
-        title, githubUrl, techStack,
-        description: description?.slice(0, 80),
-    });
-    console.log("[aiService] GROQ_API_KEY ending in:", process.env.GROQ_API_KEY?.slice(-4) ?? "NONE");
+    logger.info(`[aiService] evaluateProject: "${title}" | model: ${AI_MODEL} | prompt: ${PROMPT_VERSION}`);
 
     if (FORCE_FAILURE) {
-        console.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback");
+        logger.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback");
         return FALLBACK_EVALUATION;
     }
 
     const userPrompt = `
 Project Title: ${title}
 GitHub URL: ${githubUrl}
-Tech Stack: ${techStack.join(", ") || "Not specified"}
+Tech Stack: ${(techStack || []).join(", ") || "Not specified"}
 Description: ${description}
 `.trim();
 
@@ -102,8 +113,6 @@ Description: ${description}
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-        console.log("[aiService] Sending request to Groq (model:", AI_MODEL, ")...");
-
         const response = await client.chat.completions.create(
             {
                 model: AI_MODEL,
@@ -119,23 +128,30 @@ Description: ${description}
 
         const raw = response.choices[0]?.message?.content;
         if (!raw) {
-            console.error("[aiService] ❌ Groq returned empty content");
+            logger.error("[aiService] ❌ Groq returned empty content");
             return FALLBACK_EVALUATION;
         }
 
         const parsed = JSON.parse(raw);
-        console.log("[aiService] ✅ Parsed evaluation:", JSON.stringify(parsed, null, 2));
+
+        // Attach AI metadata to the result
+        const usage = response.usage || {};
+        parsed.aiModelVersion = AI_MODEL;
+        parsed.promptVersion = PROMPT_VERSION;
+        parsed.tokenUsage = {
+            promptTokens: usage.prompt_tokens || 0,
+            completionTokens: usage.completion_tokens || 0,
+            totalTokens: usage.total_tokens || 0,
+        };
+        parsed.fallback = false;
+
+        logger.info(`[aiService] ✅ Evaluation complete | tokens: ${usage.total_tokens || 0} | confidence: ${parsed.confidenceScore}%`);
         return parsed;
 
     } catch (error) {
-        console.error("[aiService] ❌ Groq call failed");
-        console.error("[aiService]   name    :", error.name);
-        console.error("[aiService]   message :", error.message);
+        logger.error(`[aiService] ❌ Groq call failed: ${error.name} — ${error.message}`);
         if (error.name === "AbortError") {
-            console.error("[aiService]   ⏱ Timed out after", TIMEOUT_MS, "ms");
-        }
-        if (error.error) {
-            console.error("[aiService]   API error body:", JSON.stringify(error.error, null, 2));
+            logger.error(`[aiService] ⏱ Timed out after ${TIMEOUT_MS}ms`);
         }
         return FALLBACK_EVALUATION;
     } finally {
@@ -143,4 +159,4 @@ Description: ${description}
     }
 };
 
-module.exports = { evaluateProject, FALLBACK_EVALUATION };
+module.exports = { evaluateProject, FALLBACK_EVALUATION, AI_MODEL, PROMPT_VERSION };

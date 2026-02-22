@@ -1,5 +1,17 @@
-// Weighted formula — server-owns the final score, AI never determines it directly.
-// Weights must add up to 1.0
+/**
+ * Deterministic final score calculator.
+ *
+ * The server always owns the final score — the AI provides sub-scores
+ * and we combine them with a stable weighted formula. This means:
+ * - Scores are reproducible
+ * - Weights can be adjusted without retraining models
+ * - Results are auditable and interview-explainable
+ *
+ * Formula: weighted sum → normalized to 0–100
+ * Weights must add up to 1.0
+ */
+const logger = require("./logger");
+
 const WEIGHTS = {
     architecture: 0.25,
     scalability: 0.20,
@@ -7,6 +19,9 @@ const WEIGHTS = {
     innovation: 0.15,
     realWorldImpact: 0.15,
 };
+
+// Version this so changes to the formula can be tracked
+const SCORE_VERSION = "v1.1";
 
 const SCORE_MIN = 1;
 const SCORE_MAX = 10;
@@ -18,11 +33,11 @@ const isValidScore = (score) =>
     score <= SCORE_MAX;
 
 /**
- * Calculates the deterministic final score from AI sub-scores.
- * Uses a 5-dimension weighted formula. Returns 0 if any required score is invalid.
+ * Calculates a deterministic final score from AI sub-scores.
+ * Returns a 0–100 integer. Returns 0 if any required score is invalid.
  *
  * @param {object} scores
- * @returns {number} finalScore (0–10)
+ * @returns {number} finalScore (0–100)
  */
 const calculateFinalScore = ({
     architectureScore,
@@ -31,11 +46,6 @@ const calculateFinalScore = ({
     innovationScore,
     realWorldImpactScore,
 }) => {
-    console.log("[scoreCalculator] Input scores:", {
-        architectureScore, scalabilityScore, codeQualityScore,
-        innovationScore, realWorldImpactScore,
-    });
-
     if (
         !isValidScore(architectureScore) ||
         !isValidScore(scalabilityScore) ||
@@ -43,20 +53,21 @@ const calculateFinalScore = ({
         !isValidScore(innovationScore) ||
         !isValidScore(realWorldImpactScore)
     ) {
-        console.warn("[scoreCalculator] ⚠️  One or more scores are invalid — returning 0");
+        logger.warn("[scoreCalculator] ⚠️ One or more scores are invalid — returning 0");
         return 0;
     }
 
-    const raw =
+    const rawOutOfTen =
         architectureScore * WEIGHTS.architecture +
         scalabilityScore * WEIGHTS.scalability +
         codeQualityScore * WEIGHTS.codeQuality +
         innovationScore * WEIGHTS.innovation +
         realWorldImpactScore * WEIGHTS.realWorldImpact;
 
-    const finalScore = Math.round(raw);
-    console.log("[scoreCalculator] ✅ finalScore:", finalScore);
+    // Normalize to 0–100 for better UX (more granular display)
+    const finalScore = Math.round(rawOutOfTen * 10);
+    logger.info(`[scoreCalculator] ✅ finalScore: ${finalScore}/100 (raw: ${rawOutOfTen.toFixed(2)}/10)`);
     return finalScore;
 };
 
-module.exports = { calculateFinalScore };
+module.exports = { calculateFinalScore, WEIGHTS, SCORE_VERSION };
