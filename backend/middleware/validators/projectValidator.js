@@ -1,18 +1,8 @@
-const express = require("express");
 const { body } = require("express-validator");
-const { protect } = require("../middleware/authMiddleware");
-const {
-    createProject,
-    getMyProjects,
-    getProjectById,
-    reevaluateProject,
-} = require("../controllers/projectController");
-
-const router = express.Router();
 
 const GITHUB_URL_REGEX = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/;
 
-const projectValidation = [
+exports.createProjectValidation = [
     body("title")
         .trim()
         .notEmpty().withMessage("Title is required")
@@ -32,10 +22,3 @@ const projectValidation = [
         .optional()
         .isArray().withMessage("techStack must be an array of strings"),
 ];
-
-router.post("/", protect, projectValidation, createProject);
-router.get("/", protect, getMyProjects);
-router.get("/:id", protect, getProjectById);
-router.post("/:id/reevaluate", protect, reevaluateProject);
-
-module.exports = router;

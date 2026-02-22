@@ -10,6 +10,7 @@ import ProjectDetails from "./pages/ProjectDetails";
 import PublicProfile from "./pages/PublicProfile";
 import Leaderboard from "./pages/Leaderboard";
 import Compare from "./pages/Compare";
+import AdminDashboard from "./pages/AdminDashboard";
 import { useAuth } from "./context/AuthContext";
 
 const App = () => {
@@ -34,6 +35,7 @@ const App = () => {
                 <Route path="/projects/new" element={<ProtectedRoute><AddProject /></ProtectedRoute>} />
                 <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
                 <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
 
                 <Route path="*" element={
                     <div className="page-center">
