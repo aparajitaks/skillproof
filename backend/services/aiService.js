@@ -4,13 +4,10 @@ const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const TIMEOUT_MS = 30_000;
 
-// Primary model — fast, free-tier friendly, high quality
 const AI_MODEL = "llama-3.3-70b-versatile";
-// Fallback (lighter/faster): "llama-3.1-8b-instant"
 
 const AI_TEMPERATURE = 0.2;
 
-// Set SIMULATE_AI_FAILURE=true in .env to force fallback without a real API call
 const FORCE_FAILURE = process.env.SIMULATE_AI_FAILURE === "true";
 
 const SYSTEM_PROMPT = `

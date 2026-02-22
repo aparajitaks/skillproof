@@ -31,7 +31,9 @@ const AddProject = () => {
 
         try {
             const { data } = await api.post("/projects", payload);
-            navigate(`/projects/${data._id}`);
+            // Backend returns { success, project } — extract the nested id
+            const projectId = data.project?._id ?? data._id;
+            navigate(`/projects/${projectId}`);
         } catch (err) {
             const msg = err.response?.data?.errors?.[0]?.msg
                 || err.response?.data?.message
