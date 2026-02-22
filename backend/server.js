@@ -1,11 +1,11 @@
 require("dotenv").config();
 
 // ── Boot diagnostics ──────────────────────────────────────────────────────────
-const _key = process.env.OPENAI_API_KEY;
+const _key = process.env.GROQ_API_KEY;
 console.log(
-  "[boot] OPENAI_API_KEY:",
-  _key && _key !== "your_openai_key_here"
-    ? `sk-...${_key.slice(-4)} ✅`
+  "[boot] GROQ_API_KEY:",
+  _key && _key !== "your_groq_api_key_here"
+    ? `gsk_...${_key.slice(-4)} ✅`
     : "❌ MISSING or placeholder — AI evaluation will fail!"
 );
 // ─────────────────────────────────────────────────────────────────────────────
