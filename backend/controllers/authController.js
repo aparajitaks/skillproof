@@ -27,16 +27,24 @@ exports.registerUser = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Auto-generate a unique profile slug: firstname + random 4-char hex
+    const baseSlug = name.split(" ")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
+    const suffix = Math.random().toString(16).slice(2, 6);
+    const publicProfileSlug = `${baseSlug}-${suffix}`;
+
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      publicProfileSlug,
     });
 
     res.status(201).json({
       id: user._id,
       name: user.name,
       email: user.email,
+      plan: user.plan,
+      publicProfileSlug: user.publicProfileSlug,
       token: generateToken(user._id),
     });
   } catch (error) {

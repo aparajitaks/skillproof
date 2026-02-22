@@ -19,6 +19,7 @@ const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -58,6 +59,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use(errorHandler);
 

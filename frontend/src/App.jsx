@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AddProject from "./pages/AddProject";
 import ProjectDetails from "./pages/ProjectDetails";
+import PublicProfile from "./pages/PublicProfile";
 import { useAuth } from "./context/AuthContext";
 
 const App = () => {
@@ -28,6 +29,9 @@ const App = () => {
                 <Route path="/projects/:id" element={
                     <ProtectedRoute><ProjectDetails /></ProtectedRoute>
                 } />
+
+                {/* Public developer profile — no auth required */}
+                <Route path="/u/:slug" element={<PublicProfile />} />
 
                 <Route path="*" element={
                     <div className="page-center">
