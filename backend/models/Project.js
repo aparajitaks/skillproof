@@ -2,28 +2,42 @@ const mongoose = require("mongoose");
 
 const evaluationSchema = new mongoose.Schema(
     {
-        // ── Original dimensions ──────────────────────────────────────────────
+        // ── Core dimensions (AI-scored, 1-10) ────────────────────────────────
         complexity: { type: Number, default: 0 },
         architectureScore: { type: Number, default: 0 },
         scalabilityScore: { type: Number, default: 0 },
         codeQualityScore: { type: Number, default: 0 },
-        // ── Phase 1: New dimensions ──────────────────────────────────────────
         innovationScore: { type: Number, default: 0 },
         realWorldImpactScore: { type: Number, default: 0 },
-        // ── Tags & feedback ─────────────────────────────────────────────────
+
+        // ── Tags & feedback ──────────────────────────────────────────────────
         skillTags: { type: [String], default: [] },
         strengths: { type: [String], default: [] },
         weaknesses: { type: [String], default: [] },
         improvements: { type: [String], default: [] },
-        // ── Career tools ────────────────────────────────────────────────────
+
+        // ── Career tools ─────────────────────────────────────────────────────
         resumeBullets: { type: [String], default: [] },
         nextLearningPath: { type: [String], default: [] },
-        // ── Phase 2: Company-fit scores ──────────────────────────────────────
+
+        // ── Company-fit scores (0–100) ───────────────────────────────────────
         companyFit: {
             google: { type: Number, default: 0 },
             startup: { type: Number, default: 0 },
             mnc: { type: Number, default: 0 },
         },
+
+        // ── AI metadata (interview-discussable) ──────────────────────────────
+        aiModelVersion: { type: String, default: null }, // e.g. "llama-3.3-70b-versatile"
+        promptVersion: { type: String, default: null }, // e.g. "v2.0"
+        tokenUsage: {
+            promptTokens: { type: Number, default: 0 },
+            completionTokens: { type: Number, default: 0 },
+            totalTokens: { type: Number, default: 0 },
+        },
+        confidenceScore: { type: Number, default: null }, // 0–100
+        evaluatedAt: { type: Date, default: null },
+        fallback: { type: Boolean, default: false }, // true = AI failed, using fallback
     },
     { _id: false }
 );
@@ -34,7 +48,6 @@ const projectSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
-            index: true,
         },
         title: {
             type: String,
@@ -66,19 +79,21 @@ const projectSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["pending", "evaluated", "failed"],
+            enum: ["pending", "processing", "evaluated", "failed"],
             default: "pending",
         },
         isPublic: {
             type: Boolean,
             default: false,
         },
-        certificationId: {
-            type: String,
-            default: null,
-        },
     },
     { timestamps: true }
 );
+
+// ── Indexes ───────────────────────────────────────────────────────────────────
+projectSchema.index({ user: 1, createdAt: -1 });     // User's project list (sorted)
+projectSchema.index({ finalScore: -1 });              // Leaderboard scoring
+projectSchema.index({ status: 1, finalScore: -1 });   // Leaderboard filter
+projectSchema.index({ createdAt: -1 });               // Global feed / recency
 
 module.exports = mongoose.model("Project", projectSchema);
