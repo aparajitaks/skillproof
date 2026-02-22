@@ -6,15 +6,16 @@ import {
 } from "recharts";
 import api from "../api/axios";
 
+// Thresholds for 0–9 scale:  0–2 Basic | 3–5 Intermediate | 6–9 Advanced
 const getScoreColor = (score) => {
-    if (score >= 7) return "var(--success)";
-    if (score >= 4) return "var(--warning)";
+    if (score >= 6) return "var(--success)";
+    if (score >= 3) return "var(--warning)";
     return "var(--danger)";
 };
 
 const getScoreLabel = (score) => {
-    if (score >= 7) return "Advanced";
-    if (score >= 4) return "Intermediate";
+    if (score >= 6) return "Advanced";
+    if (score >= 3) return "Intermediate";
     return "Basic";
 };
 
@@ -23,14 +24,14 @@ const ScoreBar = ({ label, score }) => (
         <div className="score-bar-header">
             <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>{label}</span>
             <span style={{ color: getScoreColor(score), fontWeight: 600, fontSize: "0.85rem" }}>
-                {score}/10 — {getScoreLabel(score)}
+                {score}/9 — {getScoreLabel(score)}
             </span>
         </div>
         <div className="score-bar-track">
             <div
                 className="score-bar-fill"
                 style={{
-                    width: `${(score / 10) * 100}%`,
+                    width: `${(score / 9) * 100}%`,
                     background: `linear-gradient(90deg, ${getScoreColor(score)}, var(--accent))`,
                 }}
             />
@@ -83,17 +84,17 @@ const ProjectDetails = () => {
     const { title, githubUrl, description, techStack, evaluation, finalScore, status, createdAt } = project;
     const hasEvaluation = status === "evaluated" && evaluation;
 
-    // Build radar chart data from evaluation
+    // Build radar chart data from evaluation — domain 0–9
     const radarData = hasEvaluation ? [
-        { subject: "Architecture", score: evaluation.architectureScore, fullMark: 10 },
-        { subject: "Code Quality", score: evaluation.codeQualityScore, fullMark: 10 },
-        { subject: "Scalability", score: evaluation.scalabilityScore, fullMark: 10 },
-        { subject: "Innovation", score: evaluation.innovationScore || 0, fullMark: 10 },
-        { subject: "Real Impact", score: evaluation.realWorldImpactScore || 0, fullMark: 10 },
+        { subject: "Architecture", score: evaluation.architectureScore, fullMark: 9 },
+        { subject: "Code Quality", score: evaluation.codeQualityScore, fullMark: 9 },
+        { subject: "Scalability", score: evaluation.scalabilityScore, fullMark: 9 },
+        { subject: "Innovation", score: evaluation.innovationScore || 0, fullMark: 9 },
+        { subject: "Real Impact", score: evaluation.realWorldImpactScore || 0, fullMark: 9 },
     ] : [];
 
     const handleShare = () => {
-        const text = `🚀 Just got my project "${title}" evaluated on SkillProof!\n\n⭐ Score: ${finalScore}/10 — ${getScoreLabel(finalScore)}\n\nCheck out my developer profile 👇`;
+        const text = `🚀 Just got my project "${title}" evaluated on SkillProof!\n\n⭐ Score: ${finalScore}/9 — ${getScoreLabel(finalScore)}\n\nCheck out my developer profile 👇`;
         const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodeURIComponent(text)}`;
         window.open(url, "_blank");
     };
@@ -161,7 +162,7 @@ const ProjectDetails = () => {
             {/* ── Evaluation Results ── */}
             {hasEvaluation ? (
                 <>
-                    {/* Radar Chart */}
+                    {/* Radar Chart — domain 0–9 */}
                     <div className="card" style={{ marginBottom: "20px" }}>
                         <h3 style={{ marginBottom: "20px" }}>🕸️ Skill Radar</h3>
                         <ResponsiveContainer width="100%" height={280}>
@@ -172,7 +173,7 @@ const ProjectDetails = () => {
                                     tick={{ fill: "var(--text-muted)", fontSize: 12 }}
                                 />
                                 <PolarRadiusAxis
-                                    angle={90} domain={[0, 10]}
+                                    angle={90} domain={[0, 9]}
                                     tick={{ fill: "var(--text-muted)", fontSize: 10 }}
                                 />
                                 <Radar
@@ -181,7 +182,7 @@ const ProjectDetails = () => {
                                     strokeWidth={2}
                                 />
                                 <Tooltip
-                                    formatter={(val) => [`${val}/10`, "Score"]}
+                                    formatter={(val) => [`${val}/9`, "Score"]}
                                     contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px" }}
                                     labelStyle={{ color: "var(--text-primary)" }}
                                 />
@@ -308,7 +309,7 @@ const ProjectDetails = () => {
                         </div>
                     )}
 
-                    {/* Company Fit */}
+                    {/* Company Fit — scores now 0–9, arc scaled accordingly */}
                     {evaluation.companyFit && (evaluation.companyFit.google > 0 || evaluation.companyFit.startup > 0 || evaluation.companyFit.mnc > 0) && (
                         <div className="card">
                             <h3 style={{ marginBottom: "8px" }}>🏢 Company-Fit Score</h3>
@@ -321,7 +322,9 @@ const ProjectDetails = () => {
                                     { key: "startup", label: "Startup", emoji: "🚀", desc: "Speed & pragmatism", color: "var(--success)" },
                                     { key: "mnc", label: "Enterprise", emoji: "🏛️", desc: "Process & reliability", color: "var(--warning)" },
                                 ].map(({ key, label, emoji, desc, color }) => {
-                                    const pct = evaluation.companyFit[key] ?? 0;
+                                    const score = evaluation.companyFit[key] ?? 0;
+                                    // Arc: circumference = 2π×32 ≈ 201; fill proportional to score/9
+                                    const arcFill = (score / 9) * 201;
                                     return (
                                         <div key={key} style={{ textAlign: "center" }}>
                                             <div style={{ position: "relative", width: "80px", height: "80px", margin: "0 auto 10px" }}>
@@ -330,7 +333,7 @@ const ProjectDetails = () => {
                                                     <circle
                                                         cx="40" cy="40" r="32" fill="none"
                                                         stroke={color} strokeWidth="8"
-                                                        strokeDasharray={`${(pct / 100) * 201} 201`}
+                                                        strokeDasharray={`${arcFill} 201`}
                                                         strokeLinecap="round"
                                                     />
                                                 </svg>
@@ -339,7 +342,7 @@ const ProjectDetails = () => {
                                                     display: "flex", alignItems: "center", justifyContent: "center",
                                                     fontSize: "1rem", fontWeight: 800, color,
                                                 }}>
-                                                    {pct}%
+                                                    {score}/9
                                                 </div>
                                             </div>
                                             <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{emoji} {label}</div>

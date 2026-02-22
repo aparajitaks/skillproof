@@ -99,11 +99,11 @@ const Dashboard = () => {
                 <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "28px" }}>
                     <StatCard label="Projects" value={projects.length} sub="total submitted" />
                     <StatCard
-                        label="Top Score" value={topScore > 0 ? `${topScore}/100` : "—"}
+                        label="Top Score" value={topScore > 0 ? `${topScore}/9` : "—"}
                         sub="best project" color="var(--success)"
                     />
                     <StatCard
-                        label="Avg Score" value={avgScore > 0 ? `${avgScore}/100` : "—"}
+                        label="Avg Score" value={avgScore > 0 ? `${avgScore}/9` : "—"}
                         sub="across evaluated" color="var(--accent)"
                         trend={scoreTrend}
                     />
@@ -119,9 +119,9 @@ const Dashboard = () => {
                         <LineChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                             <XAxis dataKey="name" tick={{ fill: "var(--text-muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
-                            <YAxis domain={[0, 100]} tick={{ fill: "var(--text-muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                            <YAxis domain={[0, 9]} tick={{ fill: "var(--text-muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
                             <Tooltip
-                                formatter={(val, _, props) => [`${val}/100 — ${props.payload.title}`, "Score"]}
+                                formatter={(val, _, props) => [`${val}/9 — ${props.payload.title}`, "Score"]}
                                 contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px" }}
                                 labelStyle={{ color: "var(--text-muted)" }}
                             />

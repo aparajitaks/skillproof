@@ -6,9 +6,10 @@ import {
 } from "recharts";
 import api from "../api/axios";
 
+// Thresholds for 0–9 scale:  0–2 Basic | 3–5 Intermediate | 6–9 Advanced
 const getScoreColor = (score) => {
-    if (score >= 7) return "var(--success)";
-    if (score >= 4) return "var(--warning)";
+    if (score >= 6) return "var(--success)";
+    if (score >= 3) return "var(--warning)";
     return "var(--danger)";
 };
 
@@ -56,7 +57,7 @@ const Compare = () => {
         subject: label,
         A: projA?.evaluation?.[key] ?? 0,
         B: projB?.evaluation?.[key] ?? 0,
-        fullMark: 10,
+        fullMark: 9,
     }));
 
     if (loading) return (
@@ -176,7 +177,7 @@ const Compare = () => {
                             <RadarChart data={radarData}>
                                 <PolarGrid stroke="rgba(255,255,255,0.08)" />
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--text-muted)", fontSize: 12 }} />
-                                <PolarRadiusAxis angle={90} domain={[0, 10]} tick={{ fill: "var(--text-muted)", fontSize: 10 }} />
+                                <PolarRadiusAxis angle={90} domain={[0, 9]} tick={{ fill: "var(--text-muted)", fontSize: 10 }} />
                                 <Radar name={projA.title.slice(0, 20)} dataKey="A"
                                     stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.2} strokeWidth={2} />
                                 <Radar name={projB.title.slice(0, 20)} dataKey="B"
@@ -233,18 +234,18 @@ const Compare = () => {
                                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                                                 <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{label}</span>
                                                 <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
-                                                    A: <b style={{ color }}>{a}%</b> · B: <b style={{ color: "var(--success)" }}>{b}%</b>
+                                                    A: <b style={{ color }}>{a}/9</b> · B: <b style={{ color: "var(--success)" }}>{b}/9</b>
                                                 </span>
                                             </div>
                                             <div style={{ display: "flex", gap: "4px", height: "6px" }}>
                                                 <div style={{
-                                                    width: `${a}%`, background: color,
+                                                    width: `${(a / 9) * 100}%`, background: color,
                                                     borderRadius: "4px 0 0 4px", opacity: 0.8,
                                                 }} />
                                             </div>
                                             <div style={{ display: "flex", gap: "4px", height: "6px", marginTop: "3px" }}>
                                                 <div style={{
-                                                    width: `${b}%`, background: "var(--success)",
+                                                    width: `${(b / 9) * 100}%`, background: "var(--success)",
                                                     borderRadius: "4px 0 0 4px", opacity: 0.6,
                                                 }} />
                                             </div>

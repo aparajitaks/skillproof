@@ -6,15 +6,16 @@ import {
 } from "recharts";
 import api from "../api/axios";
 
+// Thresholds for 0–9 scale:  0–2 Basic | 3–5 Intermediate | 6–9 Advanced
 const getScoreColor = (score) => {
-    if (score >= 7) return "var(--success)";
-    if (score >= 4) return "var(--warning)";
+    if (score >= 6) return "var(--success)";
+    if (score >= 3) return "var(--warning)";
     return "var(--danger)";
 };
 
 const getScoreLabel = (score) => {
-    if (score >= 7) return "Advanced";
-    if (score >= 4) return "Intermediate";
+    if (score >= 6) return "Advanced";
+    if (score >= 3) return "Intermediate";
     return "Basic";
 };
 
@@ -129,11 +130,11 @@ const PublicProfile = () => {
                         <RadarChart data={avgRadar}>
                             <PolarGrid stroke="rgba(255,255,255,0.08)" />
                             <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--text-muted)", fontSize: 12 }} />
-                            <PolarRadiusAxis angle={90} domain={[0, 10]} tick={{ fill: "var(--text-muted)", fontSize: 10 }} />
+                            <PolarRadiusAxis angle={90} domain={[0, 9]} tick={{ fill: "var(--text-muted)", fontSize: 10 }} />
                             <Radar name="Avg Score" dataKey="score"
                                 stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.25} strokeWidth={2} />
                             <Tooltip
-                                formatter={(val) => [`${val}/10`, "Avg Score"]}
+                                formatter={(val) => [`${val}/9`, "Avg Score"]}
                                 contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px" }}
                             />
                         </RadarChart>
