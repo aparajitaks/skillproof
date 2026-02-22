@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 
+// ── Evaluation sub-schema (re-used for history snapshots) ─────────────────────
 const evaluationSchema = new mongoose.Schema(
     {
-        // ── Core dimensions (AI-scored, 0–9) ──────────────────────────────────
+        // Core dimensions (AI-scored, 0–9)
         complexity: { type: Number, default: 0, min: 0, max: 9 },
         architectureScore: { type: Number, default: 0, min: 0, max: 9 },
         scalabilityScore: { type: Number, default: 0, min: 0, max: 9 },
@@ -10,38 +11,51 @@ const evaluationSchema = new mongoose.Schema(
         innovationScore: { type: Number, default: 0, min: 0, max: 9 },
         realWorldImpactScore: { type: Number, default: 0, min: 0, max: 9 },
 
-        // ── Tags & feedback ──────────────────────────────────────────────────
+        // Tags & feedback
         skillTags: { type: [String], default: [] },
         strengths: { type: [String], default: [] },
         weaknesses: { type: [String], default: [] },
         improvements: { type: [String], default: [] },
 
-        // ── Career tools ─────────────────────────────────────────────────────
+        // Career tools
         resumeBullets: { type: [String], default: [] },
         nextLearningPath: { type: [String], default: [] },
 
-        // ── Company-fit scores (0–9) ──────────────────────────────────────────
+        // Company-fit scores (0–9)
         companyFit: {
             google: { type: Number, default: 0, min: 0, max: 9 },
             startup: { type: Number, default: 0, min: 0, max: 9 },
             mnc: { type: Number, default: 0, min: 0, max: 9 },
         },
 
-        // ── AI metadata (interview-discussable) ──────────────────────────────
-        aiModelVersion: { type: String, default: null }, // e.g. "llama-3.3-70b-versatile"
-        promptVersion: { type: String, default: null }, // e.g. "v3.0"
+        // AI metadata
+        aiModelVersion: { type: String, default: null },
+        promptVersion: { type: String, default: null },
         tokenUsage: {
             promptTokens: { type: Number, default: 0 },
             completionTokens: { type: Number, default: 0 },
             totalTokens: { type: Number, default: 0 },
         },
-        confidenceScore: { type: Number, default: null }, // 0–100 (AI self-confidence, not project score)
+        confidenceScore: { type: Number, default: null }, // 0–100 (AI self-confidence)
         evaluatedAt: { type: Date, default: null },
-        fallback: { type: Boolean, default: false }, // true = AI failed, using fallback
+        fallback: { type: Boolean, default: false },
+        githubAnalyzed: { type: Boolean, default: false }, // true = evaluated with real code
     },
     { _id: false }
 );
 
+// ── Evaluation history entry ───────────────────────────────────────────────────
+const evaluationHistorySchema = new mongoose.Schema(
+    {
+        version: { type: Number, required: true },
+        finalScore: { type: Number, required: true },
+        evaluation: { type: evaluationSchema },
+        archivedAt: { type: Date, default: Date.now },
+    },
+    { _id: false }
+);
+
+// ── Project schema ─────────────────────────────────────────────────────────────
 const projectSchema = new mongoose.Schema(
     {
         user: {
@@ -88,12 +102,22 @@ const projectSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+
+        // ── Re-evaluation tracking ─────────────────────────────────────────────
+        evaluationVersion: {
+            type: Number,
+            default: 1,
+        },
+        evaluationHistory: {
+            type: [evaluationHistorySchema],
+            default: [],
+        },
     },
     { timestamps: true }
 );
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
-projectSchema.index({ user: 1, createdAt: -1 });     // User's project list (sorted)
+projectSchema.index({ user: 1, createdAt: -1 });     // User's project list
 projectSchema.index({ finalScore: -1 });              // Leaderboard scoring
 projectSchema.index({ status: 1, finalScore: -1 });   // Leaderboard filter
 projectSchema.index({ createdAt: -1 });               // Global feed / recency

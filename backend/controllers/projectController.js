@@ -2,10 +2,30 @@ const { validationResult } = require("express-validator");
 const Project = require("../models/Project");
 const User = require("../models/User");
 const { evaluateProject } = require("../services/aiService");
+const { fetchRepoContext } = require("../services/githubService");
 const { calculateFinalScore } = require("../utils/scoreCalculator");
 const logger = require("../utils/logger");
 
 const GITHUB_URL_REGEX = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/;
+
+// ── Shared helper: run evaluation + persist results ───────────────────────────
+const runEvaluation = async (project) => {
+    const { title, description, techStack, githubUrl } = project;
+
+    // Try to fetch real GitHub code context — silently falls back to null
+    let githubContext = null;
+    try {
+        githubContext = await fetchRepoContext(githubUrl);
+    } catch (err) {
+        logger.warn(`[projectController] GitHub fetch failed (non-fatal): ${err.message}`);
+    }
+
+    const evaluation = await evaluateProject({ title, description, techStack, githubUrl }, githubContext);
+    const finalScore = calculateFinalScore(evaluation);
+    const status = finalScore > 0 ? "evaluated" : "failed";
+
+    return { evaluation, finalScore, status };
+};
 
 // ── POST /api/projects ────────────────────────────────────────────────────────
 exports.createProject = async (req, res, next) => {
@@ -29,22 +49,17 @@ exports.createProject = async (req, res, next) => {
 
         logger.info(`[projectController] Project created (processing): ${project._id}`);
 
-        // Run AI evaluation — always returns a value, never throws
-        const evaluation = await evaluateProject({ title, description, techStack, githubUrl });
-
-        // Calculate deterministic final score — server-owned, not AI-determined
-        const finalScore = calculateFinalScore(evaluation);
-        const status = finalScore > 0 ? "evaluated" : "failed";
+        const { evaluation, finalScore, status } = await runEvaluation(project);
 
         logger.info(`[projectController] finalScore=${finalScore} → status="${status}"`);
 
-        // Persist evaluation with full AI metadata
         project.evaluation = {
             ...evaluation,
             aiModelVersion: evaluation.aiModelVersion || null,
             promptVersion: evaluation.promptVersion || null,
             tokenUsage: evaluation.tokenUsage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
             confidenceScore: evaluation.confidenceScore || null,
+            githubAnalyzed: evaluation.githubAnalyzed || false,
             evaluatedAt: new Date(),
             fallback: evaluation.fallback || false,
         };
@@ -55,13 +70,10 @@ exports.createProject = async (req, res, next) => {
         // Track AI token usage on user account
         if (evaluation.tokenUsage?.totalTokens) {
             await User.findByIdAndUpdate(req.user._id, {
-                $inc: {
-                    aiTokensUsed: evaluation.tokenUsage.totalTokens,
-                },
+                $inc: { aiTokensUsed: evaluation.tokenUsage.totalTokens },
             });
         }
 
-        // Return structured 422 when evaluation fell back to zeros
         if (status === "failed") {
             logger.warn(`[projectController] ⚠️  Evaluation failed for project: ${project._id}`);
             return res.status(422).json({
@@ -82,7 +94,7 @@ exports.createProject = async (req, res, next) => {
         res.status(201).json({ success: true, project });
 
     } catch (error) {
-        logger.error(`[projectController] Unexpected error: ${error.message}`);
+        logger.error(`[projectController] createProject error: ${error.message}`);
         next(error);
     }
 };
@@ -99,7 +111,7 @@ exports.getMyProjects = async (req, res, next) => {
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
-                .select("-__v"),
+                .select("-__v -evaluationHistory"),
             Project.countDocuments({ user: req.user._id }),
         ]);
 
@@ -128,6 +140,91 @@ exports.getProjectById = async (req, res, next) => {
 
         res.json({ success: true, project });
     } catch (error) {
+        next(error);
+    }
+};
+
+// ── POST /api/projects/:id/reevaluate ─────────────────────────────────────────
+exports.reevaluateProject = async (req, res, next) => {
+    try {
+        const project = await Project.findById(req.params.id);
+
+        if (!project) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Ownership check
+        if (project.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ success: false, message: "Access denied" });
+        }
+
+        // Guard: prevent concurrent re-evaluations
+        if (project.status === "processing") {
+            return res.status(409).json({
+                success: false,
+                message: "Evaluation already in progress. Please wait before re-evaluating.",
+            });
+        }
+
+        const previousScore = project.finalScore;
+        const previousVersion = project.evaluationVersion || 1;
+
+        // Archive current evaluation into history (cap at 10 entries)
+        if (project.evaluation) {
+            project.evaluationHistory = [
+                {
+                    version: previousVersion,
+                    finalScore: previousScore,
+                    evaluation: project.evaluation,
+                    archivedAt: new Date(),
+                },
+                ...(project.evaluationHistory || []),
+            ].slice(0, 10);
+        }
+
+        // Mark as processing
+        project.status = "processing";
+        await project.save();
+
+        logger.info(`[projectController] Re-evaluation started: ${project._id} (v${previousVersion} → v${previousVersion + 1})`);
+
+        const { evaluation, finalScore, status } = await runEvaluation(project);
+
+        project.evaluation = {
+            ...evaluation,
+            aiModelVersion: evaluation.aiModelVersion || null,
+            promptVersion: evaluation.promptVersion || null,
+            tokenUsage: evaluation.tokenUsage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+            confidenceScore: evaluation.confidenceScore || null,
+            githubAnalyzed: evaluation.githubAnalyzed || false,
+            evaluatedAt: new Date(),
+            fallback: evaluation.fallback || false,
+        };
+        project.finalScore = finalScore;
+        project.status = status;
+        project.evaluationVersion = previousVersion + 1;
+        await project.save();
+
+        // Track tokens
+        if (evaluation.tokenUsage?.totalTokens) {
+            await User.findByIdAndUpdate(req.user._id, {
+                $inc: { aiTokensUsed: evaluation.tokenUsage.totalTokens },
+            });
+        }
+
+        const scoreDelta = finalScore - (previousScore || 0);
+
+        logger.info(`[projectController] Re-evaluation done: ${project._id} | ${previousScore} → ${finalScore} (Δ${scoreDelta > 0 ? "+" : ""}${scoreDelta})`);
+
+        res.json({
+            success: true,
+            project,
+            scoreDelta,
+            previousScore,
+        });
+
+    } catch (error) {
+        logger.error(`[projectController] reevaluate error: ${error.message}`);
         next(error);
     }
 };

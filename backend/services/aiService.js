@@ -5,15 +5,14 @@ const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const TIMEOUT_MS = 30_000;
 
-// ── Versioning — increment PROMPT_VERSION when prompt changes ─────────────────
-// This is stored on every evaluation for reproducibility + debugging
+// ── Versioning ─────────────────────────────────────────────────────────────────
 const AI_MODEL = "llama-3.3-70b-versatile";
 const AI_TEMPERATURE = 0.2;
-const PROMPT_VERSION = "v3.0";
+const PROMPT_VERSION = "v4.0"; // v4.0 = code-aware evaluation
 
 const FORCE_FAILURE = process.env.SIMULATE_AI_FAILURE === "true";
 
-// ── System prompt ─────────────────────────────────────────────────────────────
+// ── Base System Prompt ─────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `
 You are a senior software engineering evaluator for a developer career intelligence platform.
 
@@ -55,7 +54,7 @@ Dimension definitions:
 - innovationScore: creative use of technology, novel solutions, originality
 - realWorldImpactScore: solves a real problem, has users, production potential
 - complexity: overall technical complexity of the project (0–9)
-- confidenceScore: your confidence (0–100) in the accuracy of this evaluation given the info provided
+- confidenceScore: your confidence (0–100) in the accuracy of this evaluation
 
 Company-fit scoring (0–9 scale):
 - google: algorithmic thinking, large-scale systems design, rigorous code quality
@@ -63,8 +62,9 @@ Company-fit scoring (0–9 scale):
 - mnc: enterprise patterns, documentation, security, maintainability standards
 
 Rules:
-- resumeBullets must be copy-paste ready for LinkedIn or a resume. No placeholders.
-- strengths and weaknesses must be specific to THIS project, not generic.
+- If real code snippets are provided, base your evaluation PRIMARILY on the code — not just the description.
+- resumeBullets must be copy-paste ready. No placeholders.
+- strengths and weaknesses must be specific to THIS project.
 - Return ONLY the JSON object. No markdown, no explanation, no text outside the JSON.
 `.trim();
 
@@ -83,33 +83,60 @@ const FALLBACK_EVALUATION = {
     resumeBullets: [],
     nextLearningPath: [],
     companyFit: { google: 0, startup: 0, mnc: 0 },
-    // Metadata
     aiModelVersion: AI_MODEL,
     promptVersion: PROMPT_VERSION,
     tokenUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
     fallback: true,
+    githubAnalyzed: false,
 };
 
 /**
- * Calls Groq to evaluate a project across 5 dimensions + company-fit + confidence.
- * All scores returned on 0–9 scale (except confidenceScore which is 0–100).
- * Always returns a value — never throws.
- * Returns token usage for cost tracking.
+ * Builds the user message, enriched with GitHub context if available.
  */
-const evaluateProject = async ({ title, description, techStack, githubUrl }) => {
-    logger.info(`[aiService] evaluateProject: "${title}" | model: ${AI_MODEL} | prompt: ${PROMPT_VERSION}`);
-
-    if (FORCE_FAILURE) {
-        logger.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback");
-        return FALLBACK_EVALUATION;
-    }
-
-    const userPrompt = `
+const buildUserMessage = ({ title, description, techStack, githubUrl }, githubContext) => {
+    const baseInfo = `
 Project Title: ${title}
 GitHub URL: ${githubUrl}
 Tech Stack: ${(techStack || []).join(", ") || "Not specified"}
 Description: ${description}
 `.trim();
+
+    if (!githubContext) return baseInfo;
+
+    const { metadata, languageBreakdown, fileTreeSize, keyFiles, dependencySummary, hasTests } = githubContext;
+
+    const fileSection = keyFiles.map(({ path, content }) =>
+        `### ${path}\n${content}`
+    ).join("\n\n");
+
+    return `${baseInfo}
+
+## Repository Analysis (Real Code)
+Stars: ${metadata.stars} | Forks: ${metadata.forks} | Open Issues: ${metadata.openIssues}
+Languages: ${languageBreakdown}
+Topics: ${metadata.topics?.join(", ") || "none"}
+Total Files: ${fileTreeSize} | Has Tests: ${hasTests ? "Yes ✅" : "No ❌"}
+${dependencySummary ? `Key Dependencies: ${dependencySummary}` : ""}
+
+## Key Source Files (evaluate based on real code below)
+${fileSection}
+
+IMPORTANT: You are seeing REAL code from this repository. Evaluate code quality, architecture, and other dimensions based on the actual code above, not just the description.`;
+};
+
+/**
+ * Core evaluation function. Accepts an optional githubContext to enrich the prompt.
+ * Always returns a value — never throws.
+ */
+const evaluateProject = async ({ title, description, techStack, githubUrl }, githubContext = null) => {
+    logger.info(`[aiService] evaluateProject: "${title}" | model: ${AI_MODEL} | prompt: ${PROMPT_VERSION} | github: ${githubContext ? "yes" : "no"}`);
+
+    if (FORCE_FAILURE) {
+        logger.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback");
+        return { ...FALLBACK_EVALUATION, githubAnalyzed: false };
+    }
+
+    const userPrompt = buildUserMessage({ title, description, techStack, githubUrl }, githubContext);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -131,15 +158,15 @@ Description: ${description}
         const raw = response.choices[0]?.message?.content;
         if (!raw) {
             logger.error("[aiService] ❌ Groq returned empty content");
-            return FALLBACK_EVALUATION;
+            return { ...FALLBACK_EVALUATION, githubAnalyzed: false };
         }
 
         const parsed = JSON.parse(raw);
-
-        // Attach AI metadata to the result
         const usage = response.usage || {};
+
         parsed.aiModelVersion = AI_MODEL;
         parsed.promptVersion = PROMPT_VERSION;
+        parsed.githubAnalyzed = !!githubContext;
         parsed.tokenUsage = {
             promptTokens: usage.prompt_tokens || 0,
             completionTokens: usage.completion_tokens || 0,
@@ -147,7 +174,7 @@ Description: ${description}
         };
         parsed.fallback = false;
 
-        logger.info(`[aiService] ✅ Evaluation complete | tokens: ${usage.total_tokens || 0} | confidence: ${parsed.confidenceScore}%`);
+        logger.info(`[aiService] ✅ Evaluation done | tokens: ${usage.total_tokens || 0} | confidence: ${parsed.confidenceScore}% | code-analyzed: ${parsed.githubAnalyzed}`);
         return parsed;
 
     } catch (error) {
@@ -155,7 +182,7 @@ Description: ${description}
         if (error.name === "AbortError") {
             logger.error(`[aiService] ⏱ Timed out after ${TIMEOUT_MS}ms`);
         }
-        return FALLBACK_EVALUATION;
+        return { ...FALLBACK_EVALUATION, githubAnalyzed: false };
     } finally {
         clearTimeout(timeout);
     }
