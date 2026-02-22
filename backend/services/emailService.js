@@ -1,6 +1,13 @@
 const { Resend } = require("resend");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialize Resend client so the module can be imported even without
+// RESEND_API_KEY set (e.g. in development). The client is created on first use.
+let _resend = null;
+function getResend() {
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder");
+    return _resend;
+}
+
 const FROM = process.env.EMAIL_FROM || "SkillProof <noreply@skillproof.dev>";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -14,7 +21,7 @@ async function send({ to, subject, html }) {
         return;
     }
     try {
-        const { error } = await resend.emails.send({ from: FROM, to, subject, html });
+        const { error } = await getResend().emails.send({ from: FROM, to, subject, html });
         if (error) console.error("[email] ❌ Resend error:", error);
         else console.log(`[email] ✅ Sent: ${subject} → ${to}`);
     } catch (err) {

@@ -1,5 +1,18 @@
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const Stripe = require("stripe");
 const User = require("../models/User");
+
+// Lazy-initialize Stripe client — safe to import without STRIPE_SECRET_KEY set.
+// Will throw a clear error only when a billing route is actually called.
+let _stripe = null;
+function getStripe() {
+    if (!_stripe) {
+        const key = process.env.STRIPE_SECRET_KEY;
+        if (!key) throw new Error("STRIPE_SECRET_KEY is not set. Configure it in .env");
+        _stripe = Stripe(key);
+    }
+    return _stripe;
+}
+
 
 // ── POST /api/billing/create-checkout-session ─────────────────────────────────
 exports.createCheckoutSession = async (req, res, next) => {
@@ -15,7 +28,7 @@ exports.createCheckoutSession = async (req, res, next) => {
         // Create Stripe customer if not exists
         let customerId = user.stripeCustomerId;
         if (!customerId) {
-            const customer = await stripe.customers.create({
+            const customer = await getStripe().customers.create({
                 email: user.email,
                 name: user.name,
                 metadata: { userId: user._id.toString() },
@@ -24,7 +37,7 @@ exports.createCheckoutSession = async (req, res, next) => {
             await User.findByIdAndUpdate(user._id, { stripeCustomerId: customerId });
         }
 
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
             customer: customerId,
             mode: "subscription",
             line_items: [{ price: priceId, quantity: 1 }],
@@ -50,7 +63,7 @@ exports.createPortalSession = async (req, res, next) => {
             return res.status(400).json({ message: "No billing account found. Subscribe first." });
         }
 
-        const session = await stripe.billingPortal.sessions.create({
+        const session = await getStripe().billingPortal.sessions.create({
             customer: user.stripeCustomerId,
             return_url: `${process.env.FRONTEND_URL}/dashboard`,
         });
@@ -72,7 +85,7 @@ exports.getBillingStatus = async (req, res, next) => {
         let nextRenewal = null;
         if (user.stripeSubId) {
             try {
-                const sub = await stripe.subscriptions.retrieve(user.stripeSubId);
+                const sub = await getStripe().subscriptions.retrieve(user.stripeSubId);
                 nextRenewal = new Date(sub.current_period_end * 1000);
             } catch { /* no-op — Stripe might be unreachable */ }
         }
@@ -99,7 +112,7 @@ exports.handleWebhook = async (req, res) => {
     let event;
 
     try {
-        event = stripe.webhooks.constructEvent(
+        event = getStripe().webhooks.constructEvent(
             req.body, // raw Buffer
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
