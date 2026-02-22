@@ -22,6 +22,9 @@ const Navbar = () => {
                     {user ? (
                         <>
                             <span style={styles.greeting}>Hey, {user.name.split(" ")[0]}</span>
+                            <Link to="/leaderboard" className="btn btn-ghost" style={{ padding: "8px 16px" }}>
+                                🏆 Leaderboard
+                            </Link>
                             <Link to="/dashboard" className="btn btn-ghost" style={{ padding: "8px 16px" }}>
                                 Dashboard
                             </Link>

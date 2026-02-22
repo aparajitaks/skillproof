@@ -285,7 +285,7 @@ const ProjectDetails = () => {
 
                     {/* Next Learning Path */}
                     {evaluation.nextLearningPath?.length > 0 && (
-                        <div className="card">
+                        <div className="card" style={{ marginBottom: "20px" }}>
                             <h3 style={{ marginBottom: "16px" }}>🗺️ Your Next Learning Path</h3>
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                 {evaluation.nextLearningPath.map((step, i) => (
@@ -304,6 +304,49 @@ const ProjectDetails = () => {
                                         <span style={{ color: "var(--text-secondary)", lineHeight: 1.6, fontSize: "0.88rem" }}>{step}</span>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Company Fit */}
+                    {evaluation.companyFit && (evaluation.companyFit.google > 0 || evaluation.companyFit.startup > 0 || evaluation.companyFit.mnc > 0) && (
+                        <div className="card">
+                            <h3 style={{ marginBottom: "8px" }}>🏢 Company-Fit Score</h3>
+                            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "20px" }}>
+                                How well does this project match what each company type looks for?
+                            </p>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                                {[
+                                    { key: "google", label: "Google", emoji: "🔵", desc: "Systems & algorithms", color: "#4285F4" },
+                                    { key: "startup", label: "Startup", emoji: "🚀", desc: "Speed & pragmatism", color: "var(--success)" },
+                                    { key: "mnc", label: "Enterprise", emoji: "🏛️", desc: "Process & reliability", color: "var(--warning)" },
+                                ].map(({ key, label, emoji, desc, color }) => {
+                                    const pct = evaluation.companyFit[key] ?? 0;
+                                    return (
+                                        <div key={key} style={{ textAlign: "center" }}>
+                                            <div style={{ position: "relative", width: "80px", height: "80px", margin: "0 auto 10px" }}>
+                                                <svg width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                                                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="8" />
+                                                    <circle
+                                                        cx="40" cy="40" r="32" fill="none"
+                                                        stroke={color} strokeWidth="8"
+                                                        strokeDasharray={`${(pct / 100) * 201} 201`}
+                                                        strokeLinecap="round"
+                                                    />
+                                                </svg>
+                                                <div style={{
+                                                    position: "absolute", inset: 0,
+                                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                                    fontSize: "1rem", fontWeight: 800, color,
+                                                }}>
+                                                    {pct}%
+                                                </div>
+                                            </div>
+                                            <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{emoji} {label}</div>
+                                            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "3px" }}>{desc}</div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

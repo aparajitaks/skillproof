@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import AddProject from "./pages/AddProject";
 import ProjectDetails from "./pages/ProjectDetails";
 import PublicProfile from "./pages/PublicProfile";
+import Leaderboard from "./pages/Leaderboard";
+import Compare from "./pages/Compare";
 import { useAuth } from "./context/AuthContext";
 
 const App = () => {
@@ -32,6 +34,14 @@ const App = () => {
 
                 {/* Public developer profile — no auth required */}
                 <Route path="/u/:slug" element={<PublicProfile />} />
+
+                {/* Leaderboard — public */}
+                <Route path="/leaderboard" element={<Leaderboard />} />
+
+                {/* Compare — protected */}
+                <Route path="/compare" element={
+                    <ProtectedRoute><Compare /></ProtectedRoute>
+                } />
 
                 <Route path="*" element={
                     <div className="page-center">
