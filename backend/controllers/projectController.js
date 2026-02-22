@@ -1,31 +1,7 @@
 const { validationResult } = require("express-validator");
 const Project = require("../models/Project");
-const User = require("../models/User");
-const { evaluateProject } = require("../services/aiService");
-const { fetchRepoContext } = require("../services/githubService");
-const { calculateFinalScore } = require("../utils/scoreCalculator");
+const { runProjectEvaluation, formatEvaluationResult } = require("../services/projectService");
 const logger = require("../utils/logger");
-
-const GITHUB_URL_REGEX = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/;
-
-// ── Shared helper: run evaluation + persist results ───────────────────────────
-const runEvaluation = async (project) => {
-    const { title, description, techStack, githubUrl } = project;
-
-    // Try to fetch real GitHub code context — silently falls back to null
-    let githubContext = null;
-    try {
-        githubContext = await fetchRepoContext(githubUrl);
-    } catch (err) {
-        logger.warn(`[projectController] GitHub fetch failed (non-fatal): ${err.message}`);
-    }
-
-    const evaluation = await evaluateProject({ title, description, techStack, githubUrl }, githubContext);
-    const finalScore = calculateFinalScore(evaluation);
-    const status = finalScore > 0 ? "evaluated" : "failed";
-
-    return { evaluation, finalScore, status };
-};
 
 // ── POST /api/projects ────────────────────────────────────────────────────────
 exports.createProject = async (req, res, next) => {
@@ -49,30 +25,12 @@ exports.createProject = async (req, res, next) => {
 
         logger.info(`[projectController] Project created (processing): ${project._id}`);
 
-        const { evaluation, finalScore, status } = await runEvaluation(project);
+        const { evaluation, finalScore, status } = await runProjectEvaluation(project);
 
         logger.info(`[projectController] finalScore=${finalScore} → status="${status}"`);
 
-        project.evaluation = {
-            ...evaluation,
-            aiModelVersion: evaluation.aiModelVersion || null,
-            promptVersion: evaluation.promptVersion || null,
-            tokenUsage: evaluation.tokenUsage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-            confidenceScore: evaluation.confidenceScore || null,
-            githubAnalyzed: evaluation.githubAnalyzed || false,
-            evaluatedAt: new Date(),
-            fallback: evaluation.fallback || false,
-        };
-        project.finalScore = finalScore;
-        project.status = status;
+        await formatEvaluationResult(project, evaluation, finalScore, status, req.user._id);
         await project.save();
-
-        // Track AI token usage on user account
-        if (evaluation.tokenUsage?.totalTokens) {
-            await User.findByIdAndUpdate(req.user._id, {
-                $inc: { aiTokensUsed: evaluation.tokenUsage.totalTokens },
-            });
-        }
 
         if (status === "failed") {
             logger.warn(`[projectController] ⚠️  Evaluation failed for project: ${project._id}`);
@@ -188,29 +146,11 @@ exports.reevaluateProject = async (req, res, next) => {
 
         logger.info(`[projectController] Re-evaluation started: ${project._id} (v${previousVersion} → v${previousVersion + 1})`);
 
-        const { evaluation, finalScore, status } = await runEvaluation(project);
+        const { evaluation, finalScore, status } = await runProjectEvaluation(project);
 
-        project.evaluation = {
-            ...evaluation,
-            aiModelVersion: evaluation.aiModelVersion || null,
-            promptVersion: evaluation.promptVersion || null,
-            tokenUsage: evaluation.tokenUsage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-            confidenceScore: evaluation.confidenceScore || null,
-            githubAnalyzed: evaluation.githubAnalyzed || false,
-            evaluatedAt: new Date(),
-            fallback: evaluation.fallback || false,
-        };
-        project.finalScore = finalScore;
-        project.status = status;
+        await formatEvaluationResult(project, evaluation, finalScore, status, req.user._id);
         project.evaluationVersion = previousVersion + 1;
         await project.save();
-
-        // Track tokens
-        if (evaluation.tokenUsage?.totalTokens) {
-            await User.findByIdAndUpdate(req.user._id, {
-                $inc: { aiTokensUsed: evaluation.tokenUsage.totalTokens },
-            });
-        }
 
         const scoreDelta = finalScore - (previousScore || 0);
 
