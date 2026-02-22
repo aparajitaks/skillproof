@@ -12,9 +12,15 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Global 401 handler — clear stale tokens
+// Global response interceptor 
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Automatically unwrap success responses if they follow the standard format
+        if (response.data && response.data.success && response.data.data) {
+            return response.data;
+        }
+        return response.data;
+    },
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem("skillproof_token");
