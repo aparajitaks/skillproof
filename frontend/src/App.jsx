@@ -12,12 +12,25 @@ import Leaderboard from "./pages/Leaderboard";
 import Compare from "./pages/Compare";
 import AdminDashboard from "./pages/AdminDashboard";
 import { useAuth } from "./context/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
     const { isAuthenticated } = useAuth();
 
     return (
         <ErrorBoundary>
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    style: {
+                        background: 'var(--surface)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border)',
+                    },
+                    success: { iconTheme: { primary: 'var(--success)', secondary: '#000' } },
+                    error: { iconTheme: { primary: 'var(--danger)', secondary: '#000' } },
+                }}
+            />
             <Navbar />
             <Routes>
                 <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />

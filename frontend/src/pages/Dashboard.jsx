@@ -8,6 +8,7 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer
 } from "recharts";
+import { Helmet } from "react-helmet-async";
 
 const StatCard = ({ label, value, sub, color, trend }) => (
     <div className="card" style={{ flex: 1, minWidth: "140px" }}>
@@ -73,6 +74,10 @@ const Dashboard = () => {
 
     return (
         <div className="page">
+            <Helmet>
+                <title>Dashboard | SkillProof</title>
+                <meta name="description" content="SkillProof dashboard and project evaluations." />
+            </Helmet>
             {/* ── Header ── */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
                 <div>

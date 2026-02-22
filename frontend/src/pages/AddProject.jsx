@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import toast from "react-hot-toast";
 import api from "../api/axios";
 
 const AddProject = () => {
@@ -31,6 +33,7 @@ const AddProject = () => {
 
         try {
             const { data } = await api.post("/projects", payload);
+            toast.success("Project submitted successfully!");
             // Backend returns { success, project } — extract the nested id
             const projectId = data.project?._id ?? data._id;
             navigate(`/projects/${projectId}`);
@@ -39,6 +42,7 @@ const AddProject = () => {
                 || err.response?.data?.message
                 || "Submission failed. Please try again.";
             setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -46,6 +50,9 @@ const AddProject = () => {
 
     return (
         <div className="page" style={{ maxWidth: "680px" }}>
+            <Helmet>
+                <title>Submit Project | SkillProof</title>
+            </Helmet>
             <Link to="/dashboard" style={{ color: "var(--text-muted)", fontSize: "0.9rem", textDecoration: "none" }}>
                 ← Back to Dashboard
             </Link>

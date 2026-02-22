@@ -4,6 +4,8 @@ import {
     RadarChart, Radar, PolarGrid, PolarAngleAxis,
     PolarRadiusAxis, ResponsiveContainer, Tooltip
 } from "recharts";
+import { Helmet } from "react-helmet-async";
+import toast from "react-hot-toast";
 import api from "../api/axios";
 
 // Thresholds for 0–9 scale:  0–2 Basic | 3–5 Intermediate | 6–9 Advanced
@@ -97,17 +99,22 @@ const ProjectDetails = () => {
         const text = `🚀 Just got my project "${title}" evaluated on SkillProof!\n\n⭐ Score: ${finalScore}/9 — ${getScoreLabel(finalScore)}\n\nCheck out my developer profile 👇`;
         const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodeURIComponent(text)}`;
         window.open(url, "_blank");
+        toast.success("Opened LinkedIn share window!");
     };
 
     const handleCopyBullets = () => {
         const text = evaluation?.resumeBullets?.join("\n• ") || "";
         navigator.clipboard.writeText("• " + text);
         setCopied(true);
+        toast.success("Bullets copied to clipboard!");
         setTimeout(() => setCopied(false), 2000);
     };
 
     return (
         <div className="page" style={{ maxWidth: "820px" }}>
+            <Helmet>
+                <title>{title ? `${title} Evaluation | SkillProof` : "Project Details | SkillProof"}</title>
+            </Helmet>
             <Link to="/dashboard" style={{ color: "var(--text-muted)", fontSize: "0.9rem", textDecoration: "none" }}>
                 ← Back to Dashboard
             </Link>
