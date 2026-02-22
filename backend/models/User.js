@@ -34,8 +34,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ── Indexes ───────────────────────────────────────────────────────────────────
-userSchema.index({ email: 1 });
-userSchema.index({ publicProfileSlug: 1 });
+// Note: email and publicProfileSlug already have indexes from `unique: true`
+// No explicit .index() needed — avoids duplicate index warnings in Mongoose
 
 module.exports = mongoose.model("User", userSchema);

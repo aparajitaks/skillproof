@@ -16,20 +16,25 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
+    // Helper: store token + user object from API response
+    // API now returns { success, token, user: { id, name, email, ... } }
+    const _persist = (data) => {
+        const token = data.token;
+        const userObj = data.user || data; // fallback for old shape
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(userObj));
+        setUser(userObj);
+        return userObj;
+    };
+
     const login = useCallback(async (email, password) => {
         const { data } = await api.post("/auth/login", { email, password });
-        localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(data));
-        setUser(data);
-        return data;
+        return _persist(data);
     }, []);
 
     const register = useCallback(async (name, email, password) => {
         const { data } = await api.post("/auth/register", { name, email, password });
-        localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(data));
-        setUser(data);
-        return data;
+        return _persist(data);
     }, []);
 
     const logout = useCallback(() => {
