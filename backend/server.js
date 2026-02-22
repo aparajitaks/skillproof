@@ -8,6 +8,7 @@ const rateLimit = require("express-rate-limit");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 const { protect } = require("./middleware/authMiddleware");
 const errorHandler = require("./middleware/errorMiddleware");
 
