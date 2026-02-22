@@ -1,59 +1,53 @@
 require("dotenv").config();
 
-// ── Boot diagnostics ──────────────────────────────────────────────────────────
-const _key = process.env.GROQ_API_KEY;
-console.log(
-  "[boot] GROQ_API_KEY:",
-  _key && _key !== "your_groq_api_key_here"
-    ? `gsk_...${_key.slice(-4)} ✅`
-    : "❌ MISSING or placeholder — AI evaluation will fail!"
-);
-// ─────────────────────────────────────────────────────────────────────────────
+const { validateEnv } = require("./config/env");
+validateEnv();
+
+const logger = require("./utils/logger");
 
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const mongoose = require("mongoose");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes");
-const certRoutes = require("./routes/certRoutes");
-const billingRoutes = require("./routes/billingRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
-const { handleWebhook } = require("./controllers/billingController");
 
 const app = express();
 
 connectDB();
 
+// ── Security ──────────────────────────────────────────────────────────────────
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
   })
 );
 
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
+  : ["http://localhost:5173"];
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: (origin, cb) => {
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );
 
-// ── Stripe webhook — MUST be before express.json() to get raw Buffer ──────────
-// Stripe requires the raw body to validate the signature
-app.post(
-  "/api/billing/webhook",
-  express.raw({ type: "application/json" }),
-  handleWebhook
-);
+app.use(express.json({ limit: "10kb" }));
 
-app.use(express.json());
-
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
 
@@ -61,41 +55,78 @@ if (process.env.NODE_ENV === "development") {
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: "Too many auth attempts. Please try again later.",
+  message: { success: false, message: "Too many auth attempts. Please try again later." },
 });
 
 const evalLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
-  message: "Too many evaluation attempts per hour.",
+  message: { success: false, message: "Too many evaluation attempts per hour." },
 });
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
-  message: "Too many requests. Please try again later.",
+  message: { success: false, message: "Too many requests. Please try again later." },
 });
 
 app.use("/api/auth", authLimiter);
+app.use("/api/projects", evalLimiter);
 app.use(apiLimiter); // global fallback
+
+// ── Health check ──────────────────────────────────────────────────────────────
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    db: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    env: process.env.NODE_ENV || "development",
+  });
+});
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
-  res.json({ message: "SkillProof API Running 🚀" });
+  res.json({ message: "SkillProof API Running 🚀", version: "2.0.0" });
 });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
-app.use("/api/cert", certRoutes);           // Public cert endpoints
-app.use("/api/billing", billingRoutes);     // Stripe billing (webhook handled above)
+
+// ── 404 handler ───────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+});
 
 // ── Error handler — must be last ──────────────────────────────────────────────
 app.use(errorHandler);
 
+// ── Start server ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5001;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || "development"} mode`);
+const server = app.listen(PORT, () => {
+  logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV || "development"} mode`);
 });
+
+// ── Graceful shutdown ─────────────────────────────────────────────────────────
+const shutdown = (signal) => {
+  logger.info(`${signal} received. Shutting down gracefully...`);
+  server.close(async () => {
+    try {
+      await mongoose.connection.close();
+      logger.info("MongoDB connection closed.");
+    } catch (err) {
+      logger.error("Error closing MongoDB connection:", err);
+    }
+    process.exit(0);
+  });
+  // Force exit after 10s if graceful shutdown fails
+  setTimeout(() => {
+    logger.error("Graceful shutdown timed out. Forcing exit.");
+    process.exit(1);
+  }, 10_000).unref();
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
