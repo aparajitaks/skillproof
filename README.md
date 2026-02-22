@@ -91,17 +91,6 @@ The application will now be running at **`http://localhost:5173`**.
 
 ---
 
-## 🐳 Running with Docker
-
-If you have Docker installed, you can skip local dependency management and spin up the entire cluster (MongoDB + Node API) instantly.
-
-```bash
-docker-compose up --build
-```
-*Note: The frontend currently runs separately out-of-container for development ease, or you can build it static via `npm run build`.*
-
----
-
 ## 📚 API Endpoint Reference
 
 | Method | Endpoint | Auth Required | Description |

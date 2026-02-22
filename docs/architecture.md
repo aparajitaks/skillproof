@@ -241,9 +241,3 @@ VITE_API_URL=https://your-backend.onrender.com/api
 
 > Also update `frontend/src/api/axios.js` baseURL to use `import.meta.env.VITE_API_URL` in production.
 
-### Docker (local full-stack)
-```bash
-docker-compose up --build
-# Backend: http://localhost:5001
-# MongoDB: mongodb://localhost:27017
-```
