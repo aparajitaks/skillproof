@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 
 const evaluationSchema = new mongoose.Schema(
     {
-        // ── Core dimensions (AI-scored, 1-10) ────────────────────────────────
-        complexity: { type: Number, default: 0 },
-        architectureScore: { type: Number, default: 0 },
-        scalabilityScore: { type: Number, default: 0 },
-        codeQualityScore: { type: Number, default: 0 },
-        innovationScore: { type: Number, default: 0 },
-        realWorldImpactScore: { type: Number, default: 0 },
+        // ── Core dimensions (AI-scored, 0–9) ──────────────────────────────────
+        complexity: { type: Number, default: 0, min: 0, max: 9 },
+        architectureScore: { type: Number, default: 0, min: 0, max: 9 },
+        scalabilityScore: { type: Number, default: 0, min: 0, max: 9 },
+        codeQualityScore: { type: Number, default: 0, min: 0, max: 9 },
+        innovationScore: { type: Number, default: 0, min: 0, max: 9 },
+        realWorldImpactScore: { type: Number, default: 0, min: 0, max: 9 },
 
         // ── Tags & feedback ──────────────────────────────────────────────────
         skillTags: { type: [String], default: [] },
@@ -20,22 +20,22 @@ const evaluationSchema = new mongoose.Schema(
         resumeBullets: { type: [String], default: [] },
         nextLearningPath: { type: [String], default: [] },
 
-        // ── Company-fit scores (0–100) ───────────────────────────────────────
+        // ── Company-fit scores (0–9) ──────────────────────────────────────────
         companyFit: {
-            google: { type: Number, default: 0 },
-            startup: { type: Number, default: 0 },
-            mnc: { type: Number, default: 0 },
+            google: { type: Number, default: 0, min: 0, max: 9 },
+            startup: { type: Number, default: 0, min: 0, max: 9 },
+            mnc: { type: Number, default: 0, min: 0, max: 9 },
         },
 
         // ── AI metadata (interview-discussable) ──────────────────────────────
         aiModelVersion: { type: String, default: null }, // e.g. "llama-3.3-70b-versatile"
-        promptVersion: { type: String, default: null }, // e.g. "v2.0"
+        promptVersion: { type: String, default: null }, // e.g. "v3.0"
         tokenUsage: {
             promptTokens: { type: Number, default: 0 },
             completionTokens: { type: Number, default: 0 },
             totalTokens: { type: Number, default: 0 },
         },
-        confidenceScore: { type: Number, default: null }, // 0–100
+        confidenceScore: { type: Number, default: null }, // 0–100 (AI self-confidence, not project score)
         evaluatedAt: { type: Date, default: null },
         fallback: { type: Boolean, default: false }, // true = AI failed, using fallback
     },
@@ -76,6 +76,8 @@ const projectSchema = new mongoose.Schema(
         finalScore: {
             type: Number,
             default: null,
+            min: 0,
+            max: 9,
         },
         status: {
             type: String,

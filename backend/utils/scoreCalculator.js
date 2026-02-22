@@ -7,7 +7,7 @@
  * - Weights can be adjusted without retraining models
  * - Results are auditable and interview-explainable
  *
- * Formula: weighted sum → normalized to 0–100
+ * Formula: weighted sum (0–10 range from AI) → normalized to 0–9
  * Weights must add up to 1.0
  */
 const logger = require("./logger");
@@ -21,10 +21,13 @@ const WEIGHTS = {
 };
 
 // Version this so changes to the formula can be tracked
-const SCORE_VERSION = "v1.1";
+const SCORE_VERSION = "v2.0";
 
-const SCORE_MIN = 1;
-const SCORE_MAX = 10;
+// AI sub-scores are expected on 0–9 scale
+const SCORE_MIN = 0;
+const SCORE_MAX = 9;
+
+const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
 
 const isValidScore = (score) =>
     typeof score === "number" &&
@@ -34,10 +37,10 @@ const isValidScore = (score) =>
 
 /**
  * Calculates a deterministic final score from AI sub-scores.
- * Returns a 0–100 integer. Returns 0 if any required score is invalid.
+ * Returns a 0–9 integer. Returns 0 if any required score is invalid.
  *
  * @param {object} scores
- * @returns {number} finalScore (0–100)
+ * @returns {number} finalScore (0–9)
  */
 const calculateFinalScore = ({
     architectureScore,
@@ -57,17 +60,18 @@ const calculateFinalScore = ({
         return 0;
     }
 
-    const rawOutOfTen =
+    // Weighted average of 0–9 scores → still 0–9
+    const rawWeightedAvg =
         architectureScore * WEIGHTS.architecture +
         scalabilityScore * WEIGHTS.scalability +
         codeQualityScore * WEIGHTS.codeQuality +
         innovationScore * WEIGHTS.innovation +
         realWorldImpactScore * WEIGHTS.realWorldImpact;
 
-    // Normalize to 0–100 for better UX (more granular display)
-    const finalScore = Math.round(rawOutOfTen * 10);
-    logger.info(`[scoreCalculator] ✅ finalScore: ${finalScore}/100 (raw: ${rawOutOfTen.toFixed(2)}/10)`);
+    // Round and clamp to guarantee integer in [0, 9]
+    const finalScore = clamp(Math.round(rawWeightedAvg), SCORE_MIN, SCORE_MAX);
+    logger.info(`[scoreCalculator] ✅ finalScore: ${finalScore}/9 (raw weighted avg: ${rawWeightedAvg.toFixed(2)})`);
     return finalScore;
 };
 
-module.exports = { calculateFinalScore, WEIGHTS, SCORE_VERSION };
+module.exports = { calculateFinalScore, WEIGHTS, SCORE_VERSION, SCORE_MIN, SCORE_MAX, clamp };

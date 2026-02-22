@@ -7,7 +7,7 @@ const logger = require("../utils/logger");
  *
  * Aggregates top developers by their best project finalScore.
  * Supports pagination via ?page=1&limit=20
- * Scores are on a 0–100 scale.
+ * Scores are on a 0–9 scale.
  */
 exports.getLeaderboard = async (req, res, next) => {
     try {
