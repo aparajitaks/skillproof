@@ -9,6 +9,9 @@ import ProjectDetails from "./pages/ProjectDetails";
 import PublicProfile from "./pages/PublicProfile";
 import Leaderboard from "./pages/Leaderboard";
 import Compare from "./pages/Compare";
+import Certificate from "./pages/Certificate";
+import Pricing from "./pages/Pricing";
+import VerifyCert from "./pages/VerifyCert";
 import { useAuth } from "./context/AuthContext";
 
 const App = () => {
@@ -21,6 +24,11 @@ const App = () => {
                 <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/pricing" element={<Pricing />} />
+
+                {/* Public certificate pages — no auth required */}
+                <Route path="/verify/:certId" element={<VerifyCert />} />
+                <Route path="/certificate/:certId" element={<Certificate />} />
 
                 <Route path="/dashboard" element={
                     <ProtectedRoute><Dashboard /></ProtectedRoute>
@@ -57,3 +65,4 @@ const App = () => {
 };
 
 export default App;
+
