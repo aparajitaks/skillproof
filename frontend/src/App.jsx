@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -9,47 +10,30 @@ import ProjectDetails from "./pages/ProjectDetails";
 import PublicProfile from "./pages/PublicProfile";
 import Leaderboard from "./pages/Leaderboard";
 import Compare from "./pages/Compare";
-import Certificate from "./pages/Certificate";
-import Pricing from "./pages/Pricing";
-import VerifyCert from "./pages/VerifyCert";
 import { useAuth } from "./context/AuthContext";
 
 const App = () => {
     const { isAuthenticated } = useAuth();
 
     return (
-        <>
+        <ErrorBoundary>
             <Navbar />
             <Routes>
                 <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/pricing" element={<Pricing />} />
 
-                {/* Public certificate pages — no auth required */}
-                <Route path="/verify/:certId" element={<VerifyCert />} />
-                <Route path="/certificate/:certId" element={<Certificate />} />
-
-                <Route path="/dashboard" element={
-                    <ProtectedRoute><Dashboard /></ProtectedRoute>
-                } />
-                <Route path="/projects/new" element={
-                    <ProtectedRoute><AddProject /></ProtectedRoute>
-                } />
-                <Route path="/projects/:id" element={
-                    <ProtectedRoute><ProjectDetails /></ProtectedRoute>
-                } />
-
-                {/* Public developer profile — no auth required */}
+                {/* Public developer profile */}
                 <Route path="/u/:slug" element={<PublicProfile />} />
 
                 {/* Leaderboard — public */}
                 <Route path="/leaderboard" element={<Leaderboard />} />
 
-                {/* Compare — protected */}
-                <Route path="/compare" element={
-                    <ProtectedRoute><Compare /></ProtectedRoute>
-                } />
+                {/* Protected routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/projects/new" element={<ProtectedRoute><AddProject /></ProtectedRoute>} />
+                <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
+                <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
 
                 <Route path="*" element={
                     <div className="page-center">
@@ -60,9 +44,8 @@ const App = () => {
                     </div>
                 } />
             </Routes>
-        </>
+        </ErrorBoundary>
     );
 };
 
 export default App;
-

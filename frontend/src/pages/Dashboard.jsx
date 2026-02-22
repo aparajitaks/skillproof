@@ -2,15 +2,26 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ProjectCard from "../components/ProjectCard";
-import api from "../api/axios";
+import { SkeletonGrid } from "../components/SkeletonCard";
+import { getProjects } from "../api/projects";
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer
 } from "recharts";
 
-const StatCard = ({ label, value, sub, color }) => (
+const StatCard = ({ label, value, sub, color, trend }) => (
     <div className="card" style={{ flex: 1, minWidth: "140px" }}>
-        <div style={{ fontSize: "1.8rem", fontWeight: 800, color: color || "var(--accent)" }}>{value}</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+            <div style={{ fontSize: "1.8rem", fontWeight: 800, color: color || "var(--accent)" }}>{value}</div>
+            {trend && (
+                <span style={{
+                    fontSize: "0.8rem", fontWeight: 700,
+                    color: trend > 0 ? "var(--success)" : trend < 0 ? "var(--danger)" : "var(--text-muted)"
+                }}>
+                    {trend > 0 ? `↑${trend}` : trend < 0 ? `↓${Math.abs(trend)}` : "→"}
+                </span>
+            )}
+        </div>
         <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginTop: "4px" }}>{label}</div>
         {sub && <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>{sub}</div>}
     </div>
@@ -19,18 +30,16 @@ const StatCard = ({ label, value, sub, color }) => (
 const Dashboard = () => {
     const { user } = useAuth();
     const [projects, setProjects] = useState([]);
-    const [usage, setUsage] = useState({ evaluationsUsed: 0, evaluationsLimit: 3, plan: "free" });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const { data } = await api.get("/projects");
-                setProjects(data.projects);
-                if (data.usage) setUsage(data.usage);
+                const { data } = await getProjects({ limit: 20 });
+                setProjects(data.projects || []);
             } catch {
-                setError("Failed to load projects.");
+                setError("Failed to load projects. Please refresh.");
             } finally {
                 setLoading(false);
             }
@@ -44,7 +53,13 @@ const Dashboard = () => {
         : 0;
     const topScore = evaluated.length ? Math.max(...evaluated.map((p) => p.finalScore || 0)) : 0;
 
-    // Score history for chart — show last 10 evaluated, oldest first
+    // Score trend: compare last score vs second-to-last
+    const sortedByDate = [...evaluated].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const scoreTrend = sortedByDate.length >= 2
+        ? (sortedByDate[0].finalScore || 0) - (sortedByDate[1].finalScore || 0)
+        : null;
+
+    // Chart: last 10 evaluated sorted oldest → newest
     const chartData = [...evaluated]
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
         .slice(-10)
@@ -54,7 +69,6 @@ const Dashboard = () => {
             title: p.title,
         }));
 
-    // Collect all unique skill tags
     const allTags = [...new Set(evaluated.flatMap((p) => p.evaluation?.skillTags || []))].slice(0, 8);
 
     return (
@@ -63,7 +77,9 @@ const Dashboard = () => {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
                 <div>
                     <h1>Welcome back, {user?.name?.split(" ")[0]} 👋</h1>
-                    <p style={{ marginTop: "6px" }}>AI-evaluated skill proof for every project you ship.</p>
+                    <p style={{ marginTop: "6px", color: "var(--text-secondary)" }}>
+                        AI-powered skill evaluation for every project you ship.
+                    </p>
                 </div>
                 <div style={{ display: "flex", gap: "10px" }}>
                     <Link to="/compare" className="btn btn-ghost">⚖️ Compare</Link>
@@ -73,58 +89,24 @@ const Dashboard = () => {
 
             <hr className="divider" />
 
-            {/* ── Phase 3: Evaluation usage meter ── */}
-            {!loading && (
-                <div style={{
-                    marginBottom: "24px",
-                    padding: "16px 20px",
-                    borderRadius: "12px",
-                    background: usage.evaluationsUsed >= usage.evaluationsLimit && usage.evaluationsLimit !== -1
-                        ? "rgba(239,68,68,0.07)"
-                        : "rgba(255,255,255,0.03)",
-                    border: usage.evaluationsUsed >= usage.evaluationsLimit && usage.evaluationsLimit !== -1
-                        ? "1px solid rgba(239,68,68,0.3)"
-                        : "1px solid var(--border)",
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
-                }}>
-                    <div style={{ flex: 1, minWidth: "200px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                            <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", fontWeight: 600 }}>
-                                {usage.plan === "free" ? "🆓 Free Plan" : `⭐ ${usage.plan.charAt(0).toUpperCase() + usage.plan.slice(1)} Plan`}
-                            </span>
-                            <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
-                                {usage.evaluationsLimit === -1
-                                    ? `${usage.evaluationsUsed} used · Unlimited`
-                                    : `${usage.evaluationsUsed} / ${usage.evaluationsLimit} evaluations used`}
-                            </span>
-                        </div>
-                        {usage.evaluationsLimit !== -1 && (
-                            <div style={{ height: "6px", background: "rgba(255,255,255,0.07)", borderRadius: "99px", overflow: "hidden" }}>
-                                <div style={{
-                                    width: `${Math.min(100, (usage.evaluationsUsed / usage.evaluationsLimit) * 100)}%`,
-                                    height: "100%",
-                                    background: usage.evaluationsUsed >= usage.evaluationsLimit ? "var(--danger)" : "var(--accent)",
-                                    borderRadius: "99px",
-                                    transition: "width 0.4s ease",
-                                }} />
-                            </div>
-                        )}
-                    </div>
-                    {usage.plan === "free" && (
-                        <Link to="/pricing" className="btn btn-primary"
-                            style={{ padding: "8px 18px", fontSize: "0.82rem", flexShrink: 0 }}>
-                            {usage.evaluationsUsed >= usage.evaluationsLimit ? "⚠️ Upgrade to continue" : "⚡ Upgrade to Pro"}
-                        </Link>
-                    )}
-                </div>
-            )}
+            {/* ── Skeleton loading ── */}
+            {loading && <SkeletonGrid count={4} />}
+
+            {error && <div className="error-box">{error}</div>}
 
             {/* ── Stats Row ── */}
-            {!loading && projects.length > 0 && (
+            {!loading && !error && projects.length > 0 && (
                 <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "28px" }}>
                     <StatCard label="Projects" value={projects.length} sub="total submitted" />
-                    <StatCard label="Avg Score" value={avgScore > 0 ? `${avgScore}/10` : "—"} sub="across evaluated" color="var(--accent)" />
-                    <StatCard label="Top Score" value={topScore > 0 ? `${topScore}/10` : "—"} sub="best project" color="var(--success)" />
+                    <StatCard
+                        label="Top Score" value={topScore > 0 ? `${topScore}/100` : "—"}
+                        sub="best project" color="var(--success)"
+                    />
+                    <StatCard
+                        label="Avg Score" value={avgScore > 0 ? `${avgScore}/100` : "—"}
+                        sub="across evaluated" color="var(--accent)"
+                        trend={scoreTrend}
+                    />
                     <StatCard label="Evaluated" value={evaluated.length} sub={`${projects.length - evaluated.length} pending`} />
                 </div>
             )}
@@ -137,9 +119,9 @@ const Dashboard = () => {
                         <LineChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                             <XAxis dataKey="name" tick={{ fill: "var(--text-muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
-                            <YAxis domain={[0, 10]} tick={{ fill: "var(--text-muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                            <YAxis domain={[0, 100]} tick={{ fill: "var(--text-muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
                             <Tooltip
-                                formatter={(val, _, props) => [`${val}/10 — ${props.payload.title}`, "Score"]}
+                                formatter={(val, _, props) => [`${val}/100 — ${props.payload.title}`, "Score"]}
                                 contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px" }}
                                 labelStyle={{ color: "var(--text-muted)" }}
                             />
@@ -164,15 +146,7 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* ── Project List ── */}
-            {loading && (
-                <div style={{ textAlign: "center", padding: "64px" }}>
-                    <span className="spinner" style={{ width: 36, height: 36 }} />
-                </div>
-            )}
-
-            {error && <div className="error-box">{error}</div>}
-
+            {/* ── Empty state ── */}
             {!loading && !error && projects.length === 0 && (
                 <div className="empty-state">
                     <div style={{ fontSize: "3rem", marginBottom: "16px" }}>🚀</div>
@@ -184,7 +158,8 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {!loading && projects.length > 0 && (
+            {/* ── Project list ── */}
+            {!loading && !error && projects.length > 0 && (
                 <>
                     <h2 style={{ marginBottom: "20px" }}>Your Projects</h2>
                     <div className="grid-cards">
