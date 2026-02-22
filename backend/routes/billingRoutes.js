@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const {
     createCheckoutSession,
     createPortalSession,
@@ -13,7 +13,7 @@ const {
 router.post("/webhook", handleWebhook);
 
 // ── Authenticated billing routes ──────────────────────────────────────────────
-router.use(authMiddleware);
+router.use(protect);
 
 router.post("/create-checkout-session", createCheckoutSession);
 router.post("/portal", createPortalSession);
