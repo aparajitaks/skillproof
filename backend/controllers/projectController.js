@@ -1,4 +1,3 @@
-const { body } = require("express-validator");
 const { validationResult } = require("express-validator");
 const Project = require("../models/Project");
 const { evaluateProject } = require("../services/aiService");
@@ -26,13 +25,16 @@ exports.createProject = async (req, res, next) => {
             status: "pending",
         });
 
+        console.log("[projectController] Project created (pending):", project._id.toString());
+
         // Run AI evaluation (safe — always returns a value, never throws)
         const evaluation = await evaluateProject({ title, description, techStack, githubUrl });
+        console.log("[projectController] Evaluation result:", JSON.stringify(evaluation, null, 2));
 
         // Calculate deterministic final score — server-owned, never from AI
         const finalScore = calculateFinalScore(evaluation);
-
         const status = finalScore > 0 ? "evaluated" : "failed";
+        console.log(`[projectController] finalScore=${finalScore} → status="${status}"`);
 
         // Update project with evaluation results
         project.evaluation = evaluation;
@@ -40,8 +42,29 @@ exports.createProject = async (req, res, next) => {
         project.status = status;
         await project.save();
 
-        res.status(201).json(project);
+        // Return structured 422 when evaluation failed so the frontend can show a clear message
+        if (status === "failed") {
+            console.warn("[projectController] ⚠️  Returning 422 — evaluation failed for project:", project._id.toString());
+            return res.status(422).json({
+                success: false,
+                message: "AI evaluation failed. Your project was saved — please resubmit to try again.",
+                project: {
+                    _id: project._id,
+                    title: project.title,
+                    status: project.status,
+                    createdAt: project.createdAt,
+                },
+                // Only exposed in development so you can see what the AI returned
+                ...(process.env.NODE_ENV === "development" && {
+                    debug: { evaluation, finalScore },
+                }),
+            });
+        }
+
+        res.status(201).json({ success: true, project });
+
     } catch (error) {
+        console.error("[projectController] ❌ Unexpected error:", error.message);
         next(error);
     }
 };

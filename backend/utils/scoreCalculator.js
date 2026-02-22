@@ -24,11 +24,14 @@ const isValidScore = (score) =>
  * @returns {number} finalScore (0 if any score is invalid)
  */
 const calculateFinalScore = ({ architectureScore, scalabilityScore, codeQualityScore }) => {
+    console.log("[scoreCalculator] Input scores:", { architectureScore, scalabilityScore, codeQualityScore });
+
     if (
         !isValidScore(architectureScore) ||
         !isValidScore(scalabilityScore) ||
         !isValidScore(codeQualityScore)
     ) {
+        console.warn("[scoreCalculator] ⚠️  One or more scores are invalid (0 or out of range) — returning finalScore: 0");
         return 0;
     }
 
@@ -37,7 +40,9 @@ const calculateFinalScore = ({ architectureScore, scalabilityScore, codeQualityS
         scalabilityScore * WEIGHTS.scalability +
         codeQualityScore * WEIGHTS.codeQuality;
 
-    return Math.round(raw);
+    const finalScore = Math.round(raw);
+    console.log("[scoreCalculator] ✅ finalScore:", finalScore);
+    return finalScore;
 };
 
 module.exports = { calculateFinalScore };

@@ -1,5 +1,15 @@
 require("dotenv").config();
 
+// ── Boot diagnostics ──────────────────────────────────────────────────────────
+const _key = process.env.OPENAI_API_KEY;
+console.log(
+  "[boot] OPENAI_API_KEY:",
+  _key && _key !== "your_openai_key_here"
+    ? `sk-...${_key.slice(-4)} ✅`
+    : "❌ MISSING or placeholder — AI evaluation will fail!"
+);
+// ─────────────────────────────────────────────────────────────────────────────
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
