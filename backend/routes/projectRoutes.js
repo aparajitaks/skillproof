@@ -5,6 +5,8 @@ const {
     createProject,
     getMyProjects,
     getProjectById,
+    certifyProject,
+    getPublicCert,
 } = require("../controllers/projectController");
 
 const router = express.Router();
@@ -42,5 +44,11 @@ const projectValidation = [
 router.post("/", protect, projectValidation, createProject);
 router.get("/", protect, getMyProjects);
 router.get("/:id", protect, getProjectById);
+
+// Phase 3: certification
+router.post("/:id/certify", protect, certifyProject);
+
+// Phase 3: public cert lookup (no auth)
+router.get("/cert/:certId", getPublicCert);
 
 module.exports = router;

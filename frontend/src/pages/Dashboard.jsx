@@ -19,6 +19,7 @@ const StatCard = ({ label, value, sub, color }) => (
 const Dashboard = () => {
     const { user } = useAuth();
     const [projects, setProjects] = useState([]);
+    const [usage, setUsage] = useState({ evaluationsUsed: 0, evaluationsLimit: 3, plan: "free" });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -27,6 +28,7 @@ const Dashboard = () => {
             try {
                 const { data } = await api.get("/projects");
                 setProjects(data.projects);
+                if (data.usage) setUsage(data.usage);
             } catch {
                 setError("Failed to load projects.");
             } finally {
@@ -63,10 +65,59 @@ const Dashboard = () => {
                     <h1>Welcome back, {user?.name?.split(" ")[0]} 👋</h1>
                     <p style={{ marginTop: "6px" }}>AI-evaluated skill proof for every project you ship.</p>
                 </div>
-                <Link to="/projects/new" className="btn btn-primary">+ Add Project</Link>
+                <div style={{ display: "flex", gap: "10px" }}>
+                    <Link to="/compare" className="btn btn-ghost">⚖️ Compare</Link>
+                    <Link to="/projects/new" className="btn btn-primary">+ Add Project</Link>
+                </div>
             </div>
 
             <hr className="divider" />
+
+            {/* ── Phase 3: Evaluation usage meter ── */}
+            {!loading && (
+                <div style={{
+                    marginBottom: "24px",
+                    padding: "16px 20px",
+                    borderRadius: "12px",
+                    background: usage.evaluationsUsed >= usage.evaluationsLimit && usage.evaluationsLimit !== -1
+                        ? "rgba(239,68,68,0.07)"
+                        : "rgba(255,255,255,0.03)",
+                    border: usage.evaluationsUsed >= usage.evaluationsLimit && usage.evaluationsLimit !== -1
+                        ? "1px solid rgba(239,68,68,0.3)"
+                        : "1px solid var(--border)",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
+                }}>
+                    <div style={{ flex: 1, minWidth: "200px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                            <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+                                {usage.plan === "free" ? "🆓 Free Plan" : `⭐ ${usage.plan.charAt(0).toUpperCase() + usage.plan.slice(1)} Plan`}
+                            </span>
+                            <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                                {usage.evaluationsLimit === -1
+                                    ? `${usage.evaluationsUsed} used · Unlimited`
+                                    : `${usage.evaluationsUsed} / ${usage.evaluationsLimit} evaluations used`}
+                            </span>
+                        </div>
+                        {usage.evaluationsLimit !== -1 && (
+                            <div style={{ height: "6px", background: "rgba(255,255,255,0.07)", borderRadius: "99px", overflow: "hidden" }}>
+                                <div style={{
+                                    width: `${Math.min(100, (usage.evaluationsUsed / usage.evaluationsLimit) * 100)}%`,
+                                    height: "100%",
+                                    background: usage.evaluationsUsed >= usage.evaluationsLimit ? "var(--danger)" : "var(--accent)",
+                                    borderRadius: "99px",
+                                    transition: "width 0.4s ease",
+                                }} />
+                            </div>
+                        )}
+                    </div>
+                    {usage.plan === "free" && (
+                        <Link to="/pricing" className="btn btn-primary"
+                            style={{ padding: "8px 18px", fontSize: "0.82rem", flexShrink: 0 }}>
+                            {usage.evaluationsUsed >= usage.evaluationsLimit ? "⚠️ Upgrade to continue" : "⚡ Upgrade to Pro"}
+                        </Link>
+                    )}
+                </div>
+            )}
 
             {/* ── Stats Row ── */}
             {!loading && projects.length > 0 && (
