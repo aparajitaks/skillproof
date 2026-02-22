@@ -9,7 +9,6 @@ const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const projectRoutes = require("./routes/projectRoutes");
-const { protect } = require("./middleware/authMiddleware");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -48,13 +47,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-
-app.get("/api/protected", protect, (req, res) => {
-  res.json({
-    message: "Access granted",
-    user: req.user,
-  });
-});
+app.use("/api/projects", projectRoutes);
 
 app.use(errorHandler);
 
