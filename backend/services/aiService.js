@@ -3,66 +3,85 @@ const Groq = require("groq-sdk");
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const TIMEOUT_MS = 30_000;
-
 const AI_MODEL = "llama-3.3-70b-versatile";
+// Fallback (lighter): "llama-3.1-8b-instant"
 
 const AI_TEMPERATURE = 0.2;
-
 const FORCE_FAILURE = process.env.SIMULATE_AI_FAILURE === "true";
 
+// ── Phase 1: 5-dimension evaluation prompt ────────────────────────────────────
 const SYSTEM_PROMPT = `
-You are a senior software engineering evaluator for a developer skill platform.
+You are a senior software engineering evaluator for a developer career intelligence platform.
 
-Evaluate the submitted project and return ONLY valid JSON with these exact keys:
+Evaluate the submitted project and return ONLY a valid JSON object with EXACTLY these keys:
 
 {
-  "complexity": <integer 1-10>,
   "architectureScore": <integer 1-10>,
-  "scalabilityScore": <integer 1-10>,
   "codeQualityScore": <integer 1-10>,
+  "scalabilityScore": <integer 1-10>,
+  "innovationScore": <integer 1-10>,
+  "realWorldImpactScore": <integer 1-10>,
+  "complexity": <integer 1-10>,
   "skillTags": ["tag1", "tag2", "tag3"],
-  "improvements": ["suggestion1", "suggestion2", "suggestion3"]
+  "strengths": ["one genuine strength", "another strength"],
+  "weaknesses": ["one genuine weakness", "another weakness"],
+  "improvements": ["concrete next step 1", "concrete next step 2", "concrete next step 3"],
+  "resumeBullets": [
+    "Built a [specific thing] using [tech] that [measurable outcome or capability]",
+    "Designed [architecture pattern] enabling [specific benefit]"
+  ],
+  "nextLearningPath": ["Learn X to improve Y", "Add Z to address weakness in W"]
 }
 
-Scoring rubric:
-- 1–3: Basic — beginner-level implementation, limited design thought
+Scoring rubric (apply to all five scored dimensions):
+- 1–3: Basic — beginner-level, limited design thought
 - 4–6: Intermediate — functional, some structure, room for improvement
 - 7–10: Advanced — production-ready, well-architected, scalable
 
-Do not include any explanation outside the JSON object. Output raw JSON only.
+Dimension definitions:
+- architectureScore: separation of concerns, patterns, modularity
+- codeQualityScore: readability, naming, test coverage, maintainability
+- scalabilityScore: ability to handle growth, stateless design, DB indexing
+- innovationScore: creative use of technology, novel solutions, originality
+- realWorldImpactScore: solves a real problem, has users, production potential
+
+Rules:
+- resumeBullets must be copy-paste ready for a LinkedIn profile or resume. No placeholders.
+- strengths and weaknesses must be specific to THIS project, not generic.
+- Do not include any explanation, markdown, or text outside the JSON object.
 `.trim();
 
 const FALLBACK_EVALUATION = {
-    complexity: 0,
     architectureScore: 0,
-    scalabilityScore: 0,
     codeQualityScore: 0,
+    scalabilityScore: 0,
+    innovationScore: 0,
+    realWorldImpactScore: 0,
+    complexity: 0,
     skillTags: [],
+    strengths: [],
+    weaknesses: [],
     improvements: ["AI evaluation temporarily unavailable. Please resubmit later."],
+    resumeBullets: [],
+    nextLearningPath: [],
 };
 
 /**
- * Calls Groq to evaluate a submitted project.
- * Returns a structured evaluation object or a fallback if the call fails.
+ * Calls Groq to evaluate a project across 5 dimensions.
+ * Always returns a value — never throws.
  *
- * @param {{ title: string, description: string, techStack: string[], githubUrl: string }} project
+ * @param {{ title, description, techStack, githubUrl }} project
  * @returns {Promise<object>} evaluation
  */
 const evaluateProject = async ({ title, description, techStack, githubUrl }) => {
-    // ── Debug: log what we received ───────────────────────────────────────────
     console.log("[aiService] evaluateProject called:", {
-        title,
-        githubUrl,
-        techStack,
+        title, githubUrl, techStack,
         description: description?.slice(0, 80),
     });
-    const keySnippet = process.env.GROQ_API_KEY?.slice(-4) ?? "NONE";
-    console.log("[aiService] Using GROQ_API_KEY ending in:", keySnippet);
-    // ─────────────────────────────────────────────────────────────────────────
+    console.log("[aiService] Using GROQ_API_KEY ending in:", process.env.GROQ_API_KEY?.slice(-4) ?? "NONE");
 
-    // Simulation mode — bypass real API call
     if (FORCE_FAILURE) {
-        console.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback without calling Groq");
+        console.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback");
         return FALLBACK_EVALUATION;
     }
 
@@ -71,7 +90,7 @@ Project Title: ${title}
 GitHub URL: ${githubUrl}
 Tech Stack: ${techStack.join(", ") || "Not specified"}
 Description: ${description}
-  `.trim();
+`.trim();
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -93,36 +112,31 @@ Description: ${description}
         );
 
         const raw = response.choices[0]?.message?.content;
-        console.log("[aiService] Raw Groq response:", raw);
-
         if (!raw) {
             console.error("[aiService] ❌ Groq returned empty content");
             return FALLBACK_EVALUATION;
         }
 
         const parsed = JSON.parse(raw);
-        console.log("[aiService] ✅ Parsed evaluation:", parsed);
+        console.log("[aiService] ✅ Parsed evaluation:", JSON.stringify(parsed, null, 2));
         return parsed;
 
     } catch (error) {
-        // ── Expose the full real error ─────────────────────────────────────────
         console.error("[aiService] ❌ Groq call failed");
         console.error("[aiService]   name    :", error.name);
         console.error("[aiService]   message :", error.message);
         console.error("[aiService]   status  :", error.status);
         console.error("[aiService]   type    :", error.type ?? error.error?.type);
-
         if (error.name === "AbortError") {
-            console.error("[aiService]   ⏱ Request timed out after", TIMEOUT_MS, "ms");
+            console.error("[aiService]   ⏱ Timed out after", TIMEOUT_MS, "ms");
         }
         if (error.error) {
             console.error("[aiService]   API error body:", JSON.stringify(error.error, null, 2));
         }
-        // ─────────────────────────────────────────────────────────────────────
         return FALLBACK_EVALUATION;
     } finally {
         clearTimeout(timeout);
     }
 };
 
-module.exports = { evaluateProject };
+module.exports = { evaluateProject, FALLBACK_EVALUATION };
