@@ -18,6 +18,12 @@ const evaluationSchema = new mongoose.Schema(
         // ── Career tools ────────────────────────────────────────────────────
         resumeBullets: { type: [String], default: [] },
         nextLearningPath: { type: [String], default: [] },
+        // ── Phase 2: Company-fit scores ──────────────────────────────────────
+        companyFit: {
+            google: { type: Number, default: 0 },
+            startup: { type: Number, default: 0 },
+            mnc: { type: Number, default: 0 },
+        },
     },
     { _id: false }
 );

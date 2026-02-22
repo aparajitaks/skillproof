@@ -4,12 +4,10 @@ const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const TIMEOUT_MS = 30_000;
 const AI_MODEL = "llama-3.3-70b-versatile";
-// Fallback (lighter): "llama-3.1-8b-instant"
-
 const AI_TEMPERATURE = 0.2;
 const FORCE_FAILURE = process.env.SIMULATE_AI_FAILURE === "true";
 
-// ── Phase 1: 5-dimension evaluation prompt ────────────────────────────────────
+// ── Phase 2: adds companyFit to 5-dimension evaluation ───────────────────────
 const SYSTEM_PROMPT = `
 You are a senior software engineering evaluator for a developer career intelligence platform.
 
@@ -30,13 +28,18 @@ Evaluate the submitted project and return ONLY a valid JSON object with EXACTLY 
     "Built a [specific thing] using [tech] that [measurable outcome or capability]",
     "Designed [architecture pattern] enabling [specific benefit]"
   ],
-  "nextLearningPath": ["Learn X to improve Y", "Add Z to address weakness in W"]
+  "nextLearningPath": ["Learn X to improve Y", "Add Z to address weakness in W"],
+  "companyFit": {
+    "google": <integer 0-100>,
+    "startup": <integer 0-100>,
+    "mnc": <integer 0-100>
+  }
 }
 
-Scoring rubric (apply to all five scored dimensions):
-- 1–3: Basic — beginner-level, limited design thought
-- 4–6: Intermediate — functional, some structure, room for improvement
-- 7–10: Advanced — production-ready, well-architected, scalable
+Scoring rubric (all five main dimensions):
+- 1–3: Basic (beginner-level)
+- 4–6: Intermediate (functional, room to grow)
+- 7–10: Advanced (production-ready, well-architected)
 
 Dimension definitions:
 - architectureScore: separation of concerns, patterns, modularity
@@ -45,10 +48,15 @@ Dimension definitions:
 - innovationScore: creative use of technology, novel solutions, originality
 - realWorldImpactScore: solves a real problem, has users, production potential
 
+Company-fit scoring:
+- google: Does this project demonstrate algorithmic thinking, large-scale systems design, and rigorous code quality? High score = would impress Google interviewers.
+- startup: Is this project fast to ship, pragmatic, user-focused, and MVP-minded? High score = startup CTO would hire for this.
+- mnc: Does this project follow enterprise patterns, documentation, security, and maintainability standards? High score = fits Fortune 500 codebases.
+
 Rules:
-- resumeBullets must be copy-paste ready for a LinkedIn profile or resume. No placeholders.
+- resumeBullets must be copy-paste ready for LinkedIn or a resume. No placeholders.
 - strengths and weaknesses must be specific to THIS project, not generic.
-- Do not include any explanation, markdown, or text outside the JSON object.
+- Return ONLY the JSON object. No markdown, no explanation, no text outside the JSON.
 `.trim();
 
 const FALLBACK_EVALUATION = {
@@ -64,21 +72,19 @@ const FALLBACK_EVALUATION = {
     improvements: ["AI evaluation temporarily unavailable. Please resubmit later."],
     resumeBullets: [],
     nextLearningPath: [],
+    companyFit: { google: 0, startup: 0, mnc: 0 },
 };
 
 /**
- * Calls Groq to evaluate a project across 5 dimensions.
+ * Calls Groq to evaluate a project across 5 dimensions + company-fit.
  * Always returns a value — never throws.
- *
- * @param {{ title, description, techStack, githubUrl }} project
- * @returns {Promise<object>} evaluation
  */
 const evaluateProject = async ({ title, description, techStack, githubUrl }) => {
     console.log("[aiService] evaluateProject called:", {
         title, githubUrl, techStack,
         description: description?.slice(0, 80),
     });
-    console.log("[aiService] Using GROQ_API_KEY ending in:", process.env.GROQ_API_KEY?.slice(-4) ?? "NONE");
+    console.log("[aiService] GROQ_API_KEY ending in:", process.env.GROQ_API_KEY?.slice(-4) ?? "NONE");
 
     if (FORCE_FAILURE) {
         console.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback");
@@ -125,8 +131,6 @@ Description: ${description}
         console.error("[aiService] ❌ Groq call failed");
         console.error("[aiService]   name    :", error.name);
         console.error("[aiService]   message :", error.message);
-        console.error("[aiService]   status  :", error.status);
-        console.error("[aiService]   type    :", error.type ?? error.error?.type);
         if (error.name === "AbortError") {
             console.error("[aiService]   ⏱ Timed out after", TIMEOUT_MS, "ms");
         }
