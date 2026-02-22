@@ -1,5 +1,5 @@
 const { ZodError } = require("zod");
-const responseHandler = require("../utils/responseHandler");
+const responseHandler = require("../../utils/responseHandler");
 
 /**
  * Validates request payload against a Zod schema
