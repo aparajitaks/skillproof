@@ -109,19 +109,19 @@ The application will now be running at **`http://localhost:5173`**.
 
 If MongoDB Compass disconnects or shows ECONNREFUSED, the mongod server is likely not running on port 27017.
 
-1️⃣ Check if MongoDB is running
+**Check if MongoDB is running
 ps aux | grep mongod
-2️⃣ Check if port 27017 is active
+**Check if port 27017 is active
 netstat -an | grep 27017
 
 If nothing appears, MongoDB isn’t running.
 
-3️⃣ Start MongoDB
+**Start MongoDB
 mongod --dbpath ~/mongodb-data
 
 (Replace ~/mongodb-data with your actual data directory.)
 
-4️⃣ If MongoDB won’t start
+**If MongoDB won’t start
 
 Kill any stuck processes:
 
@@ -129,7 +129,7 @@ pkill mongod
 
 Then start it again.
 
-✅ Once MongoDB is running on 127.0.0.1:27017, Compass should connect successfully.
+Once MongoDB is running on 127.0.0.1:27017, Compass should connect successfully.
 
 
 ## Learnings & Future Roadmap
