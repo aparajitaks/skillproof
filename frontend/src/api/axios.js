@@ -1,21 +1,19 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "/api",
+    baseURL: import.meta.env.VITE_API_URL || "/api",
     headers: { "Content-Type": "application/json" },
 });
 
-// Inject auth token on every request
+// Inject auth token
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem("skillproof_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
 
-// Global response interceptor 
 api.interceptors.response.use(
     (response) => {
-        // Automatically unwrap success responses if they follow the standard format
         if (response.data && response.data.success && response.data.data) {
             return response.data;
         }
