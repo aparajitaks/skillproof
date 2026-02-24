@@ -33,18 +33,26 @@ app.use(
 
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
-  : ["http://localhost:5173"];
+  : [];
 
 app.use(
   cors({
-    origin: (origin, cb) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      cb(new Error(`CORS: origin ${origin} not allowed`));
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("Blocked by CORS:", origin);
+      return callback(null, false);
     },
     credentials: true,
   })
 );
+
+// Handle preflight globally
+app.options("*", cors());
 
 app.use(express.json({ limit: "10kb" }));
 
