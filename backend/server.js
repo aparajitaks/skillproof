@@ -40,7 +40,13 @@ app.use(
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
 
+      // Allow exact matches from environment variable
       if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow all Vercel deployments (preview + production)
+      if (origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
 
@@ -51,7 +57,7 @@ app.use(
   })
 );
 
-// Handle preflight globally
+// Handle preflight requests globally
 app.options("*", cors());
 
 app.use(express.json({ limit: "10kb" }));
