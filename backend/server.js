@@ -69,18 +69,21 @@ const isDev = process.env.NODE_ENV !== "production";
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: isDev ? 100 : 20,
+  skip: (req) => req.method === "OPTIONS",
   message: { success: false, message: "Too many auth attempts. Please try again later." },
 });
 
 const evalLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: isDev ? 100 : 10,
+  skip: (req) => req.method === "OPTIONS",
   message: { success: false, message: "Too many evaluation attempts per hour." },
 });
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: isDev ? 1000 : 200,
+  skip: (req) => req.method === "OPTIONS",
   message: { success: false, message: "Too many requests. Please try again later." },
 });
 
