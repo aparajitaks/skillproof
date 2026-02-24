@@ -69,25 +69,6 @@ cd skillproof
 
 ---
 
-### 2. Configure Environment Variables
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-Inside `backend/.env`:
-
-```env
-PORT=5001
-MONGO_URI=mongodb+srv://pragyaksingh4_db_user:Lsa75goIAxfl5Guv@cluster0.okqbmpg.mongodb.net/?appName=Cluster0
-JWT_SECRET=e98a124772e66711058845ceddd0bbc1692615564de7b87eef56c3a983344115afdb20607e827831568079ba578f87c1f3347c16f7ee93e8a709daf2935bb9a1
-CORS_ORIGIN=http://localhost:5173
-NODE_ENV=development
-
-```
-
----
-
 ### 3. Install Dependencies
 
 ```bash
