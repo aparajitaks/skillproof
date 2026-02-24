@@ -22,6 +22,31 @@ const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
 
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
+  : [];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    if (origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+
+    console.log("Blocked by CORS:", origin);
+    return callback(null, false);
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 connectDB();
 
 // ── Security ──────────────────────────────────────────────────────────────────
@@ -30,35 +55,6 @@ app.use(
     crossOriginResourcePolicy: false,
   })
 );
-
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
-  : [];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-
-      // Allow exact matches from environment variable
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      // Allow all Vercel deployments (preview + production)
-      if (origin.endsWith(".vercel.app")) {
-        return callback(null, true);
-      }
-
-      console.log("Blocked by CORS:", origin);
-      return callback(null, false);
-    },
-    credentials: true,
-  })
-);
-
-// Handle preflight requests globally
-app.options("*", cors());
 
 app.use(express.json({ limit: "10kb" }));
 
