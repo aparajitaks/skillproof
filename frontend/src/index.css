@@ -1,45 +1,79 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --bg-base:       #0a0e1a;
-  --bg-surface:    #111827;
-  --bg-elevated:   #1a2235;
-  --border:        rgba(255,255,255,0.07);
+/* ── CSS Variables (legacy support) ─────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-  --accent:        #6366f1;
-  --accent-hover:  #4f46e5;
-  --accent-glow:   rgba(99,102,241,0.25);
+  :root {
+    --bg-base:       #0a0e1a;
+    --bg-surface:    #111827;
+    --bg-elevated:   #1a2235;
+    --border:        rgba(255,255,255,0.07);
 
-  --success:       #22c55e;
-  --warning:       #f59e0b;
-  --danger:        #ef4444;
+    --accent:        #6366f1;
+    --accent-hover:  #4f46e5;
+    --accent-glow:   rgba(99,102,241,0.25);
 
-  --text-primary:  #f1f5f9;
-  --text-secondary:#94a3b8;
-  --text-muted:    #475569;
+    --success:       #22c55e;
+    --warning:       #f59e0b;
+    --danger:        #ef4444;
 
-  --radius-sm:     6px;
-  --radius-md:     12px;
-  --radius-lg:     20px;
+    --text-primary:  #f1f5f9;
+    --text-secondary:#94a3b8;
+    --text-muted:    #475569;
 
-  --shadow-card:   0 4px 24px rgba(0,0,0,0.4);
-  --shadow-glow:   0 0 40px rgba(99,102,241,0.15);
+    --radius-sm:     6px;
+    --radius-md:     12px;
+    --radius-lg:     20px;
 
-  --transition:    all 0.2s ease;
-}
+    --shadow-card:   0 4px 24px rgba(0,0,0,0.4);
+    --shadow-glow:   0 0 40px rgba(99,102,241,0.15);
 
-html { scroll-behavior: smooth; }
+    --transition:    all 0.2s ease;
+  }
 
-body {
-  font-family: "Inter", system-ui, sans-serif;
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  line-height: 1.6;
-  min-height: 100vh;
+  html { 
+    scroll-behavior: smooth; 
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Selection styling */
+  ::selection {
+    @apply bg-primary/30 text-white;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-surface);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+  }
 }
 
 /* ── Typography ──────────────────────────────────────────────── */

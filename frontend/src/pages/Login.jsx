@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import { AnimatedBackground, GlassCard, FloatingInput, GradientButton } from "../components/ui";
+import { Mail, Lock, Zap, ArrowRight } from "lucide-react";
 
 const Login = () => {
     const { login } = useAuth();
@@ -26,57 +29,120 @@ const Login = () => {
     };
 
     return (
-        <div className="page-center">
-            <div style={{ width: "100%", maxWidth: "420px" }}>
-                <div style={{ textAlign: "center", marginBottom: "32px" }}>
-                    <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⚡</div>
-                    <h1 style={{ fontSize: "1.8rem" }}>Welcome back</h1>
-                    <p style={{ marginTop: "8px" }}>Sign in to your SkillProof account</p>
-                </div>
+        <>
+            <AnimatedBackground />
+            <div className="page-center">
+                <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    className="w-full max-w-md"
+                >
+                    {/* Header */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1, duration: 0.5 }}
+                        className="text-center mb-8"
+                    >
+                        <motion.div 
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 border border-primary/30"
+                        >
+                            <Zap className="w-8 h-8 text-primary" />
+                        </motion.div>
+                        <h1 className="text-3xl font-bold text-white mb-2">Welcome back</h1>
+                        <p className="text-secondary">Sign in to your SkillProof account</p>
+                    </motion.div>
 
-                <div className="card">
-                    {error && <div className="error-box">{error}</div>}
+                    {/* Card */}
+                    <GlassCard className="p-8" hover={false}>
+                        {/* Error Message */}
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10, height: 0 }}
+                                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                                    exit={{ opacity: 0, y: -10, height: 0 }}
+                                    className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30"
+                                >
+                                    <p className="text-red-400 text-sm flex items-center gap-2">
+                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
+                                        {error}
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">Email</label>
-                            <input
-                                id="email"
-                                name="email"
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <FloatingInput
+                                label="Email address"
                                 type="email"
-                                placeholder="jane@example.com"
+                                name="email"
                                 value={form.email}
                                 onChange={handleChange}
+                                icon={Mail}
                                 required
                             />
-                        </div>
 
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                id="password"
-                                name="password"
+                            <FloatingInput
+                                label="Password"
                                 type="password"
-                                placeholder="Your password"
+                                name="password"
                                 value={form.password}
                                 onChange={handleChange}
+                                icon={Lock}
                                 required
                             />
+
+                            <GradientButton
+                                type="submit"
+                                loading={loading}
+                                disabled={loading}
+                                className="w-full mt-6"
+                                size="lg"
+                            >
+                                Sign In
+                                <ArrowRight className="w-4 h-4" />
+                            </GradientButton>
+                        </form>
+
+                        {/* Divider */}
+                        <div className="relative my-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-white/10" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-4 bg-surface/60 text-muted">or continue with</span>
+                            </div>
                         </div>
 
-                        <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-                            {loading ? <><span className="spinner" style={{ width: 18, height: 18 }} /> Signing in…</> : "Sign In"}
-                        </button>
-                    </form>
+                        {/* Register Link */}
+                        <p className="text-center text-secondary text-sm">
+                            Don&apos;t have an account?{" "}
+                            <Link 
+                                to="/register" 
+                                className="text-primary hover:text-purple-400 font-semibold transition-colors"
+                            >
+                                Sign up free
+                            </Link>
+                        </p>
+                    </GlassCard>
 
-                    <hr className="divider" />
-                    <p style={{ textAlign: "center", fontSize: "0.9rem" }}>
-                        Don&apos;t have an account?{" "}
-                        <Link to="/register" style={{ color: "var(--accent)", fontWeight: 600 }}>Sign up free</Link>
-                    </p>
-                </div>
+                    {/* Footer */}
+                    <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="text-center text-muted text-xs mt-8"
+                    >
+                        By signing in, you agree to our Terms of Service and Privacy Policy
+                    </motion.p>
+                </motion.div>
             </div>
-        </div>
+        </>
     );
 };
 
