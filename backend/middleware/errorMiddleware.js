@@ -12,7 +12,8 @@ const responseHandler = require("../utils/responseHandler");
  * - Everything else → 500
  */
 const errorHandler = (err, req, res, next) => {
-  let statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+  // Use error's statusCode if set, otherwise check res.statusCode, default to 500
+  let statusCode = err.statusCode || (res.statusCode && res.statusCode !== 200 ? res.statusCode : 500);
   let message = err.message || "Internal Server Error";
   let code = "SERVER_ERROR";
   let errors = null;
@@ -41,6 +42,17 @@ const errorHandler = (err, req, res, next) => {
     statusCode = 409;
     message = `A record with this ${field} already exists`;
     code = "DUPLICATE_KEY";
+  }
+
+  // ── Custom statusCode errors (from services) ──────────────────────────────
+  if (err.statusCode === 409 && code === "SERVER_ERROR") {
+    code = "DUPLICATE_KEY";
+  }
+  if (err.statusCode === 401 && code === "SERVER_ERROR") {
+    code = "UNAUTHORIZED";
+  }
+  if (err.statusCode === 404 && code === "SERVER_ERROR") {
+    code = "NOT_FOUND";
   }
 
   // ── JWT errors ───────────────────────────────────────────────────────────
