@@ -28,34 +28,42 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow server-to-server (no origin) e.g. health checks
+    // Allow server-to-server (no origin) e.g. health checks, curl
     if (!origin) return callback(null, true);
 
-    // Allow explicitly listed origins
+    // Allow explicitly listed origins from CORS_ORIGIN env var
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    // Allow all localhost ports in development
-    if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(origin)) {
+    // Allow all localhost ports (for development)
+    if (/^http:\/\/localhost:\d+$/.test(origin)) {
       return callback(null, true);
     }
 
-    // Allow any *.vercel.app subdomain
+    // Allow any *.vercel.app subdomain (for Vercel deployments)
     if (origin.endsWith(".vercel.app")) {
       return callback(null, true);
     }
 
-    console.log("Blocked by CORS:", origin);
+    // Allow any *.onrender.com subdomain (for Render deployments)
+    if (origin.endsWith(".onrender.com")) {
+      return callback(null, true);
+    }
+
+    logger.warn(`CORS blocked origin: ${origin}`);
     return callback(null, false);
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 
+// Apply CORS middleware globally (handles preflight automatically)
 app.use(cors(corsOptions));
 
-// Handle preflight for all routes explicitly
-app.options("/{*splat}", cors(corsOptions));
+// Explicitly handle OPTIONS preflight for all routes
+app.options("*", cors(corsOptions));
 
 connectDB();
 
