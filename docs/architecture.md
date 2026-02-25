@@ -10,7 +10,7 @@ SkillProof is an AI-powered developer evaluation platform. Developers submit Git
 
 ```mermaid
 graph TD
-    U[👤 User Browser] -->|HTTPS| FE[React + Vite Frontend\nVercel]
+    U[User Browser] -->|HTTPS| FE[React + Vite Frontend\nVercel]
     FE -->|REST API| BE[Node.js + Express Backend\nRender / Railway]
     BE -->|Mongoose ODM| DB[(MongoDB Atlas)]
     BE -->|Groq SDK| AI[Groq LLM API\nllama-3.3-70b]

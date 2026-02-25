@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const MEDALS = ["1st", "2nd", "3rd"];
 
 const getScoreColor = (score) => {
     if (score >= 8) return "var(--success)";
@@ -33,7 +33,7 @@ const Leaderboard = () => {
         <div className="page" style={{ maxWidth: "860px" }}>
             {/* ── Header ── */}
             <div style={{ marginBottom: "36px" }}>
-                <h1 style={{ fontSize: "2rem" }}>🏆 Developer Leaderboard</h1>
+                <h1 style={{ fontSize: "2rem" }}>Developer Leaderboard</h1>
                 <p style={{ marginTop: "8px", color: "var(--text-secondary)" }}>
                     Top-ranked developers by AI project score. Updated in real-time.
                 </p>
@@ -49,7 +49,7 @@ const Leaderboard = () => {
 
             {!loading && entries.length === 0 && !error && (
                 <div className="empty-state">
-                    <div style={{ fontSize: "3rem", marginBottom: "16px" }}>🌱</div>
+                    <div style={{ fontSize: "3rem", marginBottom: "16px" }}></div>
                     <h3>No entries yet</h3>
                     <p>Be the first one on the board — submit a project!</p>
                     <Link to="/projects/new" className="btn btn-primary" style={{ marginTop: "20px" }}>
@@ -156,7 +156,7 @@ const Leaderboard = () => {
 
             <div style={{ textAlign: "center", marginTop: "40px" }}>
                 <Link to="/projects/new" className="btn btn-primary">
-                    Submit a Project to Rank Up 🚀
+                    Submit a Project to Rank Up
                 </Link>
             </div>
         </div>

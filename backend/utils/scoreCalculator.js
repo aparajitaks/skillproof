@@ -56,7 +56,7 @@ const calculateFinalScore = ({
         !isValidScore(innovationScore) ||
         !isValidScore(realWorldImpactScore)
     ) {
-        logger.warn("[scoreCalculator] ⚠️ One or more scores are invalid — returning 0");
+        logger.warn("[scoreCalculator] One or more scores are invalid — returning 0");
         return 0;
     }
 
@@ -70,7 +70,7 @@ const calculateFinalScore = ({
 
     // Round and clamp to guarantee integer in [0, 9]
     const finalScore = clamp(Math.round(rawWeightedAvg), SCORE_MIN, SCORE_MAX);
-    logger.info(`[scoreCalculator] ✅ finalScore: ${finalScore}/9 (raw weighted avg: ${rawWeightedAvg.toFixed(2)})`);
+    logger.info(`[scoreCalculator] finalScore: ${finalScore}/9 (raw weighted avg: ${rawWeightedAvg.toFixed(2)})`);
     return finalScore;
 };
 

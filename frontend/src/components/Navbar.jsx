@@ -14,7 +14,7 @@ const Navbar = () => {
         <nav style={styles.nav}>
             <div style={styles.inner}>
                 <Link to="/" style={styles.logo}>
-                    <span style={styles.logoIcon}>⚡</span>
+                    <span style={styles.logoIcon}>SP</span>
                     <span>SkillProof</span>
                 </Link>
 
@@ -23,7 +23,7 @@ const Navbar = () => {
                         <>
                             <span style={styles.greeting}>Hey, {user.name.split(" ")[0]}</span>
                             <Link to="/leaderboard" className="btn btn-ghost" style={{ padding: "8px 16px" }}>
-                                🏆 Leaderboard
+                                Leaderboard
                             </Link>
                             <Link to="/dashboard" className="btn btn-ghost" style={{ padding: "8px 16px" }}>
                                 Dashboard

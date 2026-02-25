@@ -28,7 +28,7 @@ exports.createProject = asyncHandler(async (req, res) => {
     await project.save();
 
     if (status === "failed") {
-        logger.warn(`[projectController] ⚠️  Evaluation failed for project: ${project._id}`);
+        logger.warn(`[projectController] Evaluation failed for project: ${project._id}`);
         return responseHandler.error(
             res,
             "AI evaluation failed. Your project was saved — please resubmit to try again.",

@@ -16,13 +16,13 @@ function validateEnv() {
         const envVars = envSchema.parse(process.env);
 
         if (envVars.NODE_ENV === "production" && envVars.JWT_SECRET === "change_this_in_production") {
-            logger.warn("[env] ⚠️ JWT_SECRET is using the default placeholder in production!");
+            logger.warn("[env] JWT_SECRET is using the default placeholder in production!");
         }
 
-        logger.info("[env] ✅ Environment variables validated successfully.");
+        logger.info("[env] Environment variables validated successfully.");
         return envVars;
     } catch (error) {
-        console.error("[env] ❌ Environment validation failed:");
+        console.error("[env] Environment validation failed:");
         error.errors.forEach((err) => {
             console.error(`  - ${err.path.join(".")}: ${err.message}`);
         });

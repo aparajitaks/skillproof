@@ -139,7 +139,7 @@ app.get("/api/test", (req, res) => {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
-  res.json({ message: "SkillProof API Running 🚀", version: "3.0.0" });
+  res.json({ message: "SkillProof API Running", version: "3.0.0" });
 });
 
 app.use("/api/auth", authRoutes);

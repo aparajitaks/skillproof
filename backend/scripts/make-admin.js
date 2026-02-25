@@ -13,13 +13,13 @@ const User = require("../models/User");
 
 const email = process.argv[2];
 if (!email) {
-    console.error("❌ Usage: node scripts/make-admin.js <email>");
+    console.error("Usage: node scripts/make-admin.js <email>");
     process.exit(1);
 }
 
 async function run() {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB");
 
     const user = await User.findOneAndUpdate(
         { email: email.toLowerCase() },
@@ -28,16 +28,16 @@ async function run() {
     );
 
     if (!user) {
-        console.error(`❌ No user found with email: ${email}`);
+        console.error(`No user found with email: ${email}`);
         process.exit(1);
     }
 
-    console.log(`✅ ${user.name} (${user.email}) promoted to admin`);
+    console.log(`${user.name} (${user.email}) promoted to admin`);
     await mongoose.disconnect();
     process.exit(0);
 }
 
 run().catch((err) => {
-    console.error("❌ Error:", err.message);
+    console.error("Error:", err.message);
     process.exit(1);
 });

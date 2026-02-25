@@ -99,10 +99,10 @@ const PublicProfile = () => {
                     )}
                     <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
                         <button onClick={handleShareLinkedIn} className="btn btn-ghost" style={{ fontSize: "0.8rem", padding: "5px 12px" }}>
-                            📤 Share on LinkedIn
+                            Share on LinkedIn
                         </button>
                         <button onClick={handleCopyLink} className="btn btn-ghost" style={{ fontSize: "0.8rem", padding: "5px 12px" }}>
-                            🔗 Copy Profile Link
+                            Copy Profile Link
                         </button>
                     </div>
                 </div>
@@ -125,7 +125,7 @@ const PublicProfile = () => {
             {/* ── Skill Radar ── */}
             {avgRadar.length > 0 && (
                 <div className="card" style={{ marginBottom: "24px" }}>
-                    <h3 style={{ marginBottom: "20px" }}>🕸️ Skill Radar (Average)</h3>
+                    <h3 style={{ marginBottom: "20px" }}>Skill Radar (Average)</h3>
                     <ResponsiveContainer width="100%" height={260}>
                         <RadarChart data={avgRadar}>
                             <PolarGrid stroke="rgba(255,255,255,0.08)" />
@@ -145,7 +145,7 @@ const PublicProfile = () => {
             {/* ── Skill Tags ── */}
             {allTags.length > 0 && (
                 <div className="card" style={{ marginBottom: "24px" }}>
-                    <h3 style={{ marginBottom: "14px" }}>🏷️ Tech Skills</h3>
+                    <h3 style={{ marginBottom: "14px" }}>Tech Skills</h3>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                         {allTags.map((t) => <span key={t} className="tag tag-accent">{t}</span>)}
                     </div>
@@ -155,7 +155,7 @@ const PublicProfile = () => {
             {/* ── Projects ── */}
             {evaluated.length > 0 && (
                 <div>
-                    <h3 style={{ marginBottom: "16px" }}>📁 Projects</h3>
+                    <h3 style={{ marginBottom: "16px" }}>Projects</h3>
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         {evaluated.map((p) => (
                             <div key={p._id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>

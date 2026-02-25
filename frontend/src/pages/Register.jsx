@@ -39,7 +39,7 @@ const Register = () => {
         <div className="page-center">
             <div style={{ width: "100%", maxWidth: "420px" }}>
                 <div style={{ textAlign: "center", marginBottom: "32px" }}>
-                    <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⚡</div>
+                    <div style={{ fontSize: "2rem", marginBottom: "8px", fontWeight: 800, color: "var(--accent)" }}>SP</div>
                     <h1 style={{ fontSize: "1.8rem" }}>Create your account</h1>
                     <p style={{ marginTop: "8px" }}>Start proving your skills today</p>
                 </div>

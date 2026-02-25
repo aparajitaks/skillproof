@@ -115,7 +115,7 @@ Description: ${description}
 Stars: ${metadata.stars} | Forks: ${metadata.forks} | Open Issues: ${metadata.openIssues}
 Languages: ${languageBreakdown}
 Topics: ${metadata.topics?.join(", ") || "none"}
-Total Files: ${fileTreeSize} | Has Tests: ${hasTests ? "Yes ✅" : "No ❌"}
+Total Files: ${fileTreeSize} | Has Tests: ${hasTests ? "Yes" : "No"}
 ${dependencySummary ? `Key Dependencies: ${dependencySummary}` : ""}
 
 ## Key Source Files (evaluate based on real code below)
@@ -162,7 +162,7 @@ const evaluateProject = async ({ title, description, techStack, githubUrl }, git
 
             const raw = response.choices[0]?.message?.content;
             if (!raw) {
-                logger.error("[aiService] ❌ Groq returned empty content");
+                logger.error("[aiService] Groq returned empty content");
                 return { ...FALLBACK_EVALUATION, githubAnalyzed: false };
             }
 
@@ -179,14 +179,14 @@ const evaluateProject = async ({ title, description, techStack, githubUrl }, git
             };
             parsed.fallback = false;
 
-            logger.info(`[aiService] ✅ Evaluation done | tokens: ${usage.total_tokens || 0} | confidence: ${parsed.confidenceScore}% | code-analyzed: ${parsed.githubAnalyzed}`);
+            logger.info(`[aiService] Evaluation done | tokens: ${usage.total_tokens || 0} | confidence: ${parsed.confidenceScore}% | code-analyzed: ${parsed.githubAnalyzed}`);
             return parsed;
 
         } catch (error) {
-            logger.error(`[aiService] ❌ Groq call failed (attempt ${attempt}/${maxRetries}): ${error.name} — ${error.message}`);
+            logger.error(`[aiService] Groq call failed (attempt ${attempt}/${maxRetries}): ${error.name} — ${error.message}`);
 
             if (error.name === "AbortError") {
-                logger.error(`[aiService] ⏱ Timed out after ${TIMEOUT_MS}ms`);
+                logger.error(`[aiService] Timed out after ${TIMEOUT_MS}ms`);
             }
 
             if (attempt === maxRetries) {
@@ -195,7 +195,7 @@ const evaluateProject = async ({ title, description, techStack, githubUrl }, git
 
             // Exponential backoff: 2s, 4s, 8s...
             const delay = Math.pow(2, attempt) * 1000;
-            logger.info(`[aiService] ⏳ Retrying in ${delay}ms...`);
+            logger.info(`[aiService] Retrying in ${delay}ms...`);
             await new Promise((resolve) => setTimeout(resolve, delay));
         } finally {
             clearTimeout(timeout);

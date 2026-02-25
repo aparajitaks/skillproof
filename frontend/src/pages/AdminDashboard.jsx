@@ -89,7 +89,7 @@ const AdminDashboard = () => {
         <div className="page" style={{ maxWidth: "1000px" }}>
             {/* Header */}
             <div style={{ marginBottom: "28px" }}>
-                <h1 style={{ fontSize: "1.8rem" }}>🛡️ Admin Dashboard</h1>
+                <h1 style={{ fontSize: "1.8rem" }}>Admin Dashboard</h1>
                 <p style={{ marginTop: "6px", color: "var(--text-secondary)" }}>
                     Platform observability — all data is live from MongoDB.
                 </p>
@@ -114,13 +114,13 @@ const AdminDashboard = () => {
                 <>
                     {/* Stat grid */}
                     <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "24px" }}>
-                        <StatCard icon="👥" label="Total Users" value={stats.totalUsers} />
-                        <StatCard icon="📁" label="Total Projects" value={stats.totalProjects} />
-                        <StatCard icon="✅" label="Evaluated" value={stats.evaluatedProjects}
+                        <StatCard icon="" label="Total Users" value={stats.totalUsers} />
+                        <StatCard icon="" label="Total Projects" value={stats.totalProjects} />
+                        <StatCard icon="" label="Evaluated" value={stats.evaluatedProjects}
                             sub={`${stats.failedProjects} failed`} color="var(--success)" />
-                        <StatCard icon="⭐" label="Avg Score" value={`${stats.avgPlatformScore}/9`}
+                        <StatCard icon="" label="Avg Score" value={`${stats.avgPlatformScore}/9`}
                             color="var(--accent)" />
-                        <StatCard icon="🤖" label="Tokens Used"
+                        <StatCard icon="" label="Tokens Used"
                             value={stats.totalTokensUsed.toLocaleString()}
                             sub={`Est. $${stats.estimatedCostUsd}`}
                             color="var(--warning)" />
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
                     {/* Top Tech Stacks */}
                     {stats.topTechStacks?.length > 0 && (
                         <div className="card" style={{ marginBottom: "20px" }}>
-                            <h3 style={{ marginBottom: "16px" }}>🔧 Top Tech Stacks</h3>
+                            <h3 style={{ marginBottom: "16px" }}>Top Tech Stacks</h3>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
                                 {stats.topTechStacks.map(({ name, count }) => (
                                     <div key={name} style={{
@@ -147,7 +147,7 @@ const AdminDashboard = () => {
 
                     {/* Status breakdown */}
                     <div className="card">
-                        <h3 style={{ marginBottom: "16px" }}>📊 Project Status Breakdown</h3>
+                        <h3 style={{ marginBottom: "16px" }}>Project Status Breakdown</h3>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
                             {[
                                 { label: "Evaluated", val: stats.evaluatedProjects, color: "var(--success)" },
@@ -168,7 +168,7 @@ const AdminDashboard = () => {
             {/* ── Users Tab ── */}
             {tab === "Users" && (
                 <div className="card" style={{ overflowX: "auto" }}>
-                    <h3 style={{ marginBottom: "16px" }}>👥 All Users</h3>
+                    <h3 style={{ marginBottom: "16px" }}>All Users</h3>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
                         <thead>
                             <tr style={{ borderBottom: "1px solid var(--border)" }}>
@@ -200,7 +200,7 @@ const AdminDashboard = () => {
             {/* ── Projects Tab ── */}
             {tab === "Projects" && (
                 <div className="card" style={{ overflowX: "auto" }}>
-                    <h3 style={{ marginBottom: "16px" }}>📁 All Projects</h3>
+                    <h3 style={{ marginBottom: "16px" }}>All Projects</h3>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
                         <thead>
                             <tr style={{ borderBottom: "1px solid var(--border)" }}>

@@ -42,10 +42,10 @@ const ScoreBar = ({ label, score }) => (
 );
 
 const BADGE_DEFS = [
-    { id: "first_project", icon: "🚀", label: "Pioneer" },
-    { id: "score_8_plus", icon: "⭐", label: "Top Scorer" },
-    { id: "advanced_arch", icon: "🏛️", label: "Architect" },
-    { id: "full_stack", icon: "🔧", label: "Full-Stack" },
+    { id: "first_project", icon: "*", label: "Pioneer" },
+    { id: "score_8_plus", icon: "*", label: "Top Scorer" },
+    { id: "advanced_arch", icon: "*", label: "Architect" },
+    { id: "full_stack", icon: "*", label: "Full-Stack" },
 ];
 
 const ProjectDetails = () => {
@@ -96,7 +96,7 @@ const ProjectDetails = () => {
     ] : [];
 
     const handleShare = () => {
-        const text = `🚀 Just got my project "${title}" evaluated on SkillProof!\n\n⭐ Score: ${finalScore}/9 — ${getScoreLabel(finalScore)}\n\nCheck out my developer profile 👇`;
+        const text = `Just got my project "${title}" evaluated on SkillProof!\n\nScore: ${finalScore}/9 — ${getScoreLabel(finalScore)}\n\nCheck out my developer profile`;
         const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodeURIComponent(text)}`;
         window.open(url, "_blank");
         toast.success("Opened LinkedIn share window!");
@@ -149,7 +149,7 @@ const ProjectDetails = () => {
                     </p>
                     {hasEvaluation && (
                         <button onClick={handleShare} className="btn btn-ghost" style={{ marginTop: "12px", fontSize: "0.8rem", padding: "6px 14px" }}>
-                            📤 Share on LinkedIn
+                            Share on LinkedIn
                         </button>
                     )}
                 </div>
@@ -171,7 +171,7 @@ const ProjectDetails = () => {
                 <>
                     {/* Radar Chart — domain 0–9 */}
                     <div className="card" style={{ marginBottom: "20px" }}>
-                        <h3 style={{ marginBottom: "20px" }}>🕸️ Skill Radar</h3>
+                        <h3 style={{ marginBottom: "20px" }}>Skill Radar</h3>
                         <ResponsiveContainer width="100%" height={280}>
                             <RadarChart data={radarData}>
                                 <PolarGrid stroke="rgba(255,255,255,0.08)" />
@@ -199,7 +199,7 @@ const ProjectDetails = () => {
 
                     {/* Score Bars */}
                     <div className="card" style={{ marginBottom: "20px" }}>
-                        <h3 style={{ marginBottom: "20px" }}>📊 AI Score Breakdown</h3>
+                        <h3 style={{ marginBottom: "20px" }}>AI Score Breakdown</h3>
                         <ScoreBar label="Architecture" score={evaluation.architectureScore} />
                         <ScoreBar label="Code Quality" score={evaluation.codeQualityScore} />
                         <ScoreBar label="Scalability" score={evaluation.scalabilityScore} />
@@ -213,7 +213,7 @@ const ProjectDetails = () => {
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
                             {evaluation.strengths?.length > 0 && (
                                 <div className="card">
-                                    <h3 style={{ marginBottom: "14px", color: "var(--success)" }}>✅ Strengths</h3>
+                                    <h3 style={{ marginBottom: "14px", color: "var(--success)" }}>Strengths</h3>
                                     <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
                                         {evaluation.strengths.map((s, i) => (
                                             <li key={i} style={{ display: "flex", gap: "10px" }}>
@@ -226,7 +226,7 @@ const ProjectDetails = () => {
                             )}
                             {evaluation.weaknesses?.length > 0 && (
                                 <div className="card">
-                                    <h3 style={{ marginBottom: "14px", color: "var(--warning)" }}>⚠️ Weaknesses</h3>
+                                    <h3 style={{ marginBottom: "14px", color: "var(--warning)" }}>Weaknesses</h3>
                                     <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
                                         {evaluation.weaknesses.map((w, i) => (
                                             <li key={i} style={{ display: "flex", gap: "10px" }}>
@@ -244,9 +244,9 @@ const ProjectDetails = () => {
                     {evaluation.resumeBullets?.length > 0 && (
                         <div className="card" style={{ marginBottom: "20px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                                <h3>📄 Resume Bullets</h3>
+                                <h3>Resume Bullets</h3>
                                 <button onClick={handleCopyBullets} className="btn btn-ghost" style={{ fontSize: "0.78rem", padding: "4px 12px" }}>
-                                    {copied ? "✅ Copied!" : "Copy All"}
+                                    {copied ? "Copied!" : "Copy All"}
                                 </button>
                             </div>
                             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -267,7 +267,7 @@ const ProjectDetails = () => {
                     {/* Skill Tags */}
                     {evaluation.skillTags?.length > 0 && (
                         <div className="card" style={{ marginBottom: "20px" }}>
-                            <h3 style={{ marginBottom: "16px" }}>🏷️ Skill Tags</h3>
+                            <h3 style={{ marginBottom: "16px" }}>Skill Tags</h3>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                                 {evaluation.skillTags.map((t) => <span key={t} className="tag tag-accent">{t}</span>)}
                             </div>
@@ -277,7 +277,7 @@ const ProjectDetails = () => {
                     {/* Improvements */}
                     {evaluation.improvements?.length > 0 && (
                         <div className="card" style={{ marginBottom: "20px" }}>
-                            <h3 style={{ marginBottom: "16px" }}>💡 AI Recommendations</h3>
+                            <h3 style={{ marginBottom: "16px" }}>AI Recommendations</h3>
                             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "12px" }}>
                                 {evaluation.improvements.map((item, i) => (
                                     <li key={i} style={{ display: "flex", gap: "12px" }}>
@@ -294,7 +294,7 @@ const ProjectDetails = () => {
                     {/* Next Learning Path */}
                     {evaluation.nextLearningPath?.length > 0 && (
                         <div className="card" style={{ marginBottom: "20px" }}>
-                            <h3 style={{ marginBottom: "16px" }}>🗺️ Your Next Learning Path</h3>
+                            <h3 style={{ marginBottom: "16px" }}>Your Next Learning Path</h3>
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                 {evaluation.nextLearningPath.map((step, i) => (
                                     <div key={i} style={{
@@ -319,15 +319,15 @@ const ProjectDetails = () => {
                     {/* Company Fit — scores now 0–9, arc scaled accordingly */}
                     {evaluation.companyFit && (evaluation.companyFit.google > 0 || evaluation.companyFit.startup > 0 || evaluation.companyFit.mnc > 0) && (
                         <div className="card">
-                            <h3 style={{ marginBottom: "8px" }}>🏢 Company-Fit Score</h3>
+                            <h3 style={{ marginBottom: "8px" }}>Company-Fit Score</h3>
                             <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "20px" }}>
                                 How well does this project match what each company type looks for?
                             </p>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                                 {[
-                                    { key: "google", label: "Google", emoji: "🔵", desc: "Systems & algorithms", color: "#4285F4" },
-                                    { key: "startup", label: "Startup", emoji: "🚀", desc: "Speed & pragmatism", color: "var(--success)" },
-                                    { key: "mnc", label: "Enterprise", emoji: "🏛️", desc: "Process & reliability", color: "var(--warning)" },
+                                    { key: "google", label: "Google", emoji: "", desc: "Systems & algorithms", color: "#4285F4" },
+                                    { key: "startup", label: "Startup", emoji: "", desc: "Speed & pragmatism", color: "var(--success)" },
+                                    { key: "mnc", label: "Enterprise", emoji: "", desc: "Process & reliability", color: "var(--warning)" },
                                 ].map(({ key, label, emoji, desc, color }) => {
                                     const score = evaluation.companyFit[key] ?? 0;
                                     // Arc: circumference = 2π×32 ≈ 201; fill proportional to score/9

@@ -81,13 +81,13 @@ const Dashboard = () => {
             {/* ── Header ── */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
                 <div>
-                    <h1>Welcome back, {user?.name?.split(" ")[0]} 👋</h1>
+                    <h1>Welcome back, {user?.name?.split(" ")[0]}</h1>
                     <p style={{ marginTop: "6px", color: "var(--text-secondary)" }}>
                         AI-powered skill evaluation for every project you ship.
                     </p>
                 </div>
                 <div style={{ display: "flex", gap: "10px" }}>
-                    <Link to="/compare" className="btn btn-ghost">⚖️ Compare</Link>
+                    <Link to="/compare" className="btn btn-ghost">Compare</Link>
                     <Link to="/projects/new" className="btn btn-primary">+ Add Project</Link>
                 </div>
             </div>
@@ -119,7 +119,7 @@ const Dashboard = () => {
             {/* ── Score History Chart ── */}
             {chartData.length >= 2 && (
                 <div className="card" style={{ marginBottom: "28px" }}>
-                    <h3 style={{ marginBottom: "20px" }}>📈 Score History</h3>
+                    <h3 style={{ marginBottom: "20px" }}>Score History</h3>
                     <ResponsiveContainer width="100%" height={200}>
                         <LineChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -144,7 +144,7 @@ const Dashboard = () => {
             {/* ── Skill Tag Cloud ── */}
             {allTags.length > 0 && (
                 <div className="card" style={{ marginBottom: "28px" }}>
-                    <h3 style={{ marginBottom: "14px" }}>🏷️ Your Skill Profile</h3>
+                    <h3 style={{ marginBottom: "14px" }}>Your Skill Profile</h3>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                         {allTags.map((t) => <span key={t} className="tag tag-accent">{t}</span>)}
                     </div>
@@ -154,7 +154,7 @@ const Dashboard = () => {
             {/* ── Empty state ── */}
             {!loading && !error && projects.length === 0 && (
                 <div className="empty-state">
-                    <div style={{ fontSize: "3rem", marginBottom: "16px" }}>🚀</div>
+                    <div style={{ fontSize: "3rem", marginBottom: "16px" }}></div>
                     <h3>No projects yet</h3>
                     <p>Submit your first project and get an instant AI evaluation.</p>
                     <Link to="/projects/new" className="btn btn-primary" style={{ marginTop: "24px" }}>

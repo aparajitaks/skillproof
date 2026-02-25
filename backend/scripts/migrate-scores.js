@@ -28,7 +28,7 @@ const to9 = (v) => {
 
 async function run() {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ Connected to MongoDB:", process.env.MONGO_URI);
+    console.log("Connected to MongoDB:", process.env.MONGO_URI);
 
     // Find projects that still have scores on the old (>9) scale
     const staleProjects = await Project.find({
@@ -46,8 +46,8 @@ async function run() {
         ],
     });
 
-    console.log(`\n📋 Found ${staleProjects.length} project(s) needing migration.`);
-    if (DRY_RUN) console.log("🔍 DRY RUN — no changes will be written.\n");
+    console.log(`\nFound ${staleProjects.length} project(s) needing migration.`);
+    if (DRY_RUN) console.log("DRY RUN — no changes will be written.\n");
 
     let updated = 0;
     for (const p of staleProjects) {
@@ -105,9 +105,9 @@ async function run() {
     }
 
     if (DRY_RUN) {
-        console.log(`✅ Dry run complete. ${staleProjects.length} document(s) would be updated.`);
+        console.log(`Dry run complete. ${staleProjects.length} document(s) would be updated.`);
     } else {
-        console.log(`✅ Migration complete. ${updated}/${staleProjects.length} document(s) updated.`);
+        console.log(`Migration complete. ${updated}/${staleProjects.length} document(s) updated.`);
     }
 
     await mongoose.disconnect();
@@ -115,6 +115,6 @@ async function run() {
 }
 
 run().catch((err) => {
-    console.error("❌ Migration failed:", err.message);
+    console.error("Migration failed:", err.message);
     process.exit(1);
 });

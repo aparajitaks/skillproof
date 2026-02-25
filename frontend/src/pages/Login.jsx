@@ -29,7 +29,7 @@ const Login = () => {
         <div className="page-center">
             <div style={{ width: "100%", maxWidth: "420px" }}>
                 <div style={{ textAlign: "center", marginBottom: "32px" }}>
-                    <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⚡</div>
+                    <div style={{ fontSize: "2rem", marginBottom: "8px", fontWeight: 800, color: "var(--accent)" }}>SP</div>
                     <h1 style={{ fontSize: "1.8rem" }}>Welcome back</h1>
                     <p style={{ marginTop: "8px" }}>Sign in to your SkillProof account</p>
                 </div>

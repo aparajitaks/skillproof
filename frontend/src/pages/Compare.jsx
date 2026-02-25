@@ -68,7 +68,7 @@ const Compare = () => {
 
     if (projects.length < 2) return (
         <div className="page" style={{ maxWidth: "600px", textAlign: "center" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "20px" }}>⚖️</div>
+            <div style={{ fontSize: "1.5rem", marginBottom: "20px", fontWeight: "bold" }}>Compare</div>
             <h2>Not enough projects to compare</h2>
             <p style={{ marginTop: "10px", color: "var(--text-secondary)" }}>
                 You need at least 2 evaluated projects to use the comparison tool.
@@ -84,7 +84,7 @@ const Compare = () => {
     return (
         <div className="page" style={{ maxWidth: "900px" }}>
             <div style={{ marginBottom: "32px" }}>
-                <h1 style={{ fontSize: "1.8rem" }}>⚖️ Compare Projects</h1>
+                <h1 style={{ fontSize: "1.8rem" }}>Compare Projects</h1>
                 <p style={{ marginTop: "8px", color: "var(--text-secondary)" }}>
                     Pick two of your evaluated projects to see a side-by-side breakdown.
                 </p>
@@ -172,7 +172,7 @@ const Compare = () => {
 
                     {/* ── Overlay Radar ── */}
                     <div className="card" style={{ marginBottom: "24px" }}>
-                        <h3 style={{ marginBottom: "20px" }}>🕸️ Skill Radar Overlay</h3>
+                        <h3 style={{ marginBottom: "20px" }}>Skill Radar Overlay</h3>
                         <ResponsiveContainer width="100%" height={300}>
                             <RadarChart data={radarData}>
                                 <PolarGrid stroke="rgba(255,255,255,0.08)" />
@@ -189,7 +189,7 @@ const Compare = () => {
 
                     {/* ── Dimension Diff Table ── */}
                     <div className="card" style={{ marginBottom: "24px" }}>
-                        <h3 style={{ marginBottom: "20px" }}>📊 Dimension Breakdown</h3>
+                        <h3 style={{ marginBottom: "20px" }}>Dimension Breakdown</h3>
                         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto auto", gap: "10px 16px", alignItems: "center" }}>
                             {/* Header */}
                             <div />
@@ -220,12 +220,12 @@ const Compare = () => {
                     {/* ── Company Fit Comparison ── */}
                     {(projA.evaluation?.companyFit || projB.evaluation?.companyFit) && (
                         <div className="card">
-                            <h3 style={{ marginBottom: "20px" }}>🏢 Company-Fit Comparison</h3>
+                            <h3 style={{ marginBottom: "20px" }}>Company-Fit Comparison</h3>
                             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                                 {[
-                                    { key: "google", label: "🔵 Google", color: "#4285F4" },
-                                    { key: "startup", label: "🚀 Startup", color: "var(--success)" },
-                                    { key: "mnc", label: "🏛️ Enterprise (MNC)", color: "var(--warning)" },
+                                    { key: "google", label: "Google", color: "#4285F4" },
+                                    { key: "startup", label: "Startup", color: "var(--success)" },
+                                    { key: "mnc", label: "Enterprise (MNC)", color: "var(--warning)" },
                                 ].map(({ key, label, color }) => {
                                     const a = projA.evaluation?.companyFit?.[key] ?? 0;
                                     const b = projB.evaluation?.companyFit?.[key] ?? 0;
