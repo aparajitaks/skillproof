@@ -62,9 +62,6 @@ const corsOptions = {
 // Apply CORS middleware globally (handles preflight automatically)
 app.use(cors(corsOptions));
 
-// Explicitly handle OPTIONS preflight for all routes
-app.options("*", cors(corsOptions));
-
 connectDB();
 
 // ── Security ──────────────────────────────────────────────────────────────────
