@@ -44,7 +44,9 @@
   }
 
   body {
-    @apply font-sans antialiased;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background-color: var(--bg-base);
     color: var(--text-primary);
     line-height: 1.6;
@@ -53,7 +55,8 @@
 
   /* Selection styling */
   ::selection {
-    @apply bg-primary/30 text-white;
+    background-color: rgba(99, 102, 241, 0.3);
+    color: white;
   }
 
   /* Scrollbar styling */
