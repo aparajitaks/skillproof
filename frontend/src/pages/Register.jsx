@@ -40,41 +40,76 @@ const Register = () => {
 
     return (
         <>
+            {/* Animated gradient background - positioned fixed behind everything */}
             <AnimatedBackground />
-            <div className="page-center">
+            
+            {/* 
+              Main container: 
+              - min-h-screen ensures full viewport height
+              - flex with items-center + justify-center for TRUE centering
+              - px-4 sm:px-6 for consistent horizontal padding
+              - py-12 for vertical breathing room (accounts for navbar)
+            */}
+            <main className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
+                
+                {/* 
+                  Content wrapper:
+                  - w-full ensures it fills available space on mobile
+                  - max-w-md caps width at 28rem (448px) for optimal form readability
+                  - mx-auto is redundant with flex centering but ensures fallback
+                */}
                 <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                     className="w-full max-w-md"
                 >
-                    {/* Header */}
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
+                    {/* 
+                      Header section:
+                      - text-center for alignment
+                      - mb-8 creates consistent gap before card (32px)
+                    */}
+                    <motion.header 
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1, duration: 0.5 }}
+                        transition={{ delay: 0.1, duration: 0.4 }}
                         className="text-center mb-8"
                     >
+                        {/* Icon badge */}
                         <motion.div 
-                            whileHover={{ scale: 1.1, rotate: -5 }}
-                            className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30"
+                            whileHover={{ scale: 1.05, rotate: -3 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="inline-flex items-center justify-center w-16 h-16 mb-5 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 backdrop-blur-sm"
                         >
                             <Sparkles className="w-8 h-8 text-purple-400" />
                         </motion.div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Create your account</h1>
-                        <p className="text-secondary">Start proving your skills today</p>
-                    </motion.div>
+                        
+                        {/* Heading - text-3xl on mobile, text-4xl on larger screens */}
+                        <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-2">
+                            Create your account
+                        </h1>
+                        
+                        {/* Subtitle - muted color for visual hierarchy */}
+                        <p className="text-gray-400 text-base">
+                            Start proving your skills today
+                        </p>
+                    </motion.header>
 
-                    {/* Card */}
-                    <GlassCard className="p-8" hover={false}>
-                        {/* Error Message */}
-                        <AnimatePresence>
+                    {/* 
+                      Form Card:
+                      - p-8 sm:p-10 for comfortable inner spacing
+                      - GlassCard already has rounded-2xl, backdrop-blur, border, shadow
+                    */}
+                    <GlassCard className="p-8 sm:p-10" hover={false}>
+                        {/* Error Message - with smooth enter/exit animations */}
+                        <AnimatePresence mode="wait">
                             {error && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -10, height: 0 }}
-                                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                                    exit={{ opacity: 0, y: -10, height: 0 }}
-                                    className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30"
+                                    initial={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
+                                    animate={{ opacity: 1, y: 0, height: "auto", marginBottom: 24 }}
+                                    exit={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/30"
                                 >
                                     <p className="text-red-400 text-sm flex items-center gap-2">
                                         <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -86,6 +121,7 @@ const Register = () => {
                             )}
                         </AnimatePresence>
 
+                        {/* Form - space-y-5 for consistent 20px gaps between inputs */}
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <FloatingInput
                                 label="Full Name"
@@ -117,52 +153,70 @@ const Register = () => {
                                 required
                             />
 
-                            <GradientButton
-                                type="submit"
-                                loading={loading}
-                                disabled={loading}
-                                className="w-full mt-6"
-                                size="lg"
-                                variant="primary"
-                            >
-                                <Zap className="w-4 h-4" />
-                                Create Account
-                            </GradientButton>
+                            {/* Submit button - pt-2 adds slight extra space above button */}
+                            <div className="pt-2">
+                                <GradientButton
+                                    type="submit"
+                                    loading={loading}
+                                    disabled={loading}
+                                    className="w-full"
+                                    size="lg"
+                                    variant="primary"
+                                >
+                                    <Zap className="w-4 h-4" />
+                                    Create Account
+                                </GradientButton>
+                            </div>
                         </form>
 
-                        {/* Divider */}
+                        {/* Divider - my-8 for equal 32px spacing above and below */}
                         <div className="relative my-8">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-white/10" />
                             </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-4 bg-surface/60 text-muted">or continue with</span>
+                            <div className="relative flex justify-center">
+                                <span className="px-4 bg-[#111827]/80 text-gray-500 text-sm">
+                                    or continue with
+                                </span>
                             </div>
                         </div>
 
                         {/* Login Link */}
-                        <p className="text-center text-secondary text-sm">
+                        <p className="text-center text-gray-400 text-sm">
                             Already have an account?{" "}
                             <Link 
                                 to="/login" 
-                                className="text-primary hover:text-purple-400 font-semibold transition-colors"
+                                className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
                             >
                                 Sign in
                             </Link>
                         </p>
                     </GlassCard>
 
-                    {/* Footer */}
-                    <motion.p 
+                    {/* 
+                      Footer text:
+                      - mt-8 creates consistent gap after card (32px)
+                      - Matches mb-8 above card for visual symmetry
+                    */}
+                    <motion.footer 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="text-center text-muted text-xs mt-8"
+                        transition={{ delay: 0.4, duration: 0.4 }}
+                        className="text-center mt-8"
                     >
-                        By creating an account, you agree to our Terms of Service and Privacy Policy
-                    </motion.p>
+                        <p className="text-gray-500 text-xs leading-relaxed">
+                            By creating an account, you agree to our{" "}
+                            <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                                Terms of Service
+                            </a>{" "}
+                            and{" "}
+                            <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                                Privacy Policy
+                            </a>
+                        </p>
+                    </motion.footer>
                 </motion.div>
-            </div>
+            </main>
         </>
     );
 };
