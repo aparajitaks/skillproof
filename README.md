@@ -1,181 +1,183 @@
-<div align="center">
-  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" />
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
-  <img src="https://img.shields.io/badge/Groq_AI-FF6B6B?style=for-the-badge&logo=groq&logoColor=white" />
-</div>
+# SkillProof — AI-Powered Skill Validation Engine
 
-<h1 align="center">SkillProof - AI-Powered Developer Portfolio Evaluator</h1>
+## Overview
+SkillProof is a senior-level software engineering project designed to automate the validation of technical skills by analyzing source code directly from GitHub. Using high-performance LLMs (Groq/LLAMA-3), it provides developers with data-driven proficiency scores and qualitative feedback.
 
-SkillProof is a full-stack SaaS application built to evaluate open-source software projects. By submitting a GitHub repository URL and a brief description, the Groq LLM analyzes architecture, code quality, and real-world impact to generate deterministic developer scores and professional resume bullets.
+## Tech Stack
+- **Frontend**: React 18 + Vite + React Router
+- **Backend**: Node.js + Express 5 + MongoDB (Mongoose)
+- **AI**: Groq API (LLAMA-3)
+- **Deployment**: Vercel (Frontend) + Render (Backend)
 
-This project demonstrates scalable backend architecture, LLM API integration, deterministic evaluation pipelines, and a modern frontend dashboard.
-
----
-
-## Key Features
-
-- **Automated AI Project Evaluation:** Submits project details to Groq LLM to generate normalized scores across five dimensions (Architecture, Scalability, Code Quality, Innovation, Impact).
-- **Deterministic Scoring Engine:** Uses a server-calculated weighted algorithm to ensure stable and reproducible 0–100 global scores.
-- **Robust API with JWT Authentication:** Express-based REST API using Zod for validation, jsonwebtoken for stateless authentication, and rate-limiting for abuse prevention.
-- **Company-Fit Analysis:** Calculates role-fit percentages for enterprise, startup, and big-tech roles.
-- **Global Leaderboard:** Uses MongoDB compound indexes for efficient aggregation and ranking.
-- **Modern React Dashboard:** Built with Vite, React Router DOM, Recharts, and skeleton loaders for improved user experience.
-
----
-
-## System Architecture (MVC-S)
-
-The backend follows a strict Model-View-Controller-Service structure.
-
-### Routing Layer (`/routes`)
-Maps HTTP verbs to controllers.
-
-### Controller Layer (`/controllers`)
-Handles HTTP context and delegates business logic to services.  
-Wrapped with `asyncHandler` to remove repetitive try/catch blocks.
-
-### Service Layer (`/services`)
-Contains core business logic.
-
-- `projectService.js` – Handles MongoDB transactions and evaluation logic.
-- `aiService.js` – Manages Groq LLM integration with:
-  - Exponential backoff retries
-  - Deterministic fallback state if the LLM fails
-
-### Validation & Observability
-- Zod schema validation for incoming payloads
-- Structured Pino logging for observability
-
----
-
-## Local Development Setup
-
-### Requirements
-
-- Node.js 20+
-- MongoDB (Local or Atlas)
-- Groq API Key
-
----
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/your-username/skillproof.git
-cd skillproof
+## Project Structure
+```
+skillproof/
+├── backend/
+│   ├── config/         # Environment & DB configuration
+│   ├── controllers/    # API Request handlers
+│   ├── middleware/     # Auth, RBAC & Global Error handling
+│   ├── models/         # Mongoose Schemas & OOP Methods
+│   ├── repositories/   # Data access abstraction layer
+│   ├── routes/         # Express API route definitions
+│   ├── services/       # Core business logic & AI orchestration
+│   ├── utils/          # Shared utilities & helpers
+│   └── server.js       # Entry point
+├── frontend/
+│   ├── src/
+│   │   ├── api/        # Axios instance & API calls
+│   │   ├── components/ # Reusable React components
+│   │   ├── context/    # React Context providers
+│   │   ├── pages/      # Page components
+│   │   ├── App.jsx     # Main app component
+│   │   └── main.jsx    # Entry point
+│   └── vite.config.js  # Vite configuration
+├── docs/               # Architecture documentation
+└── README.md
 ```
 
----
+## Quick Start
 
-### 3. Install Dependencies
+### Prerequisites
+- Node.js 18+
+- MongoDB (local or Atlas)
+- Groq API Key ([Get one free](https://console.groq.com/keys))
 
+### 1. Clone & Install
 ```bash
+git clone https://github.com/aparajitaks/skillproof.git
+cd skillproof
+
+# Install backend dependencies
 cd backend && npm install
+
+# Install frontend dependencies
 cd ../frontend && npm install
 ```
 
+### 2. Configure Environment
+
+**Backend** (`backend/.env`):
+```bash
+cp backend/.env.example backend/.env
+# Edit backend/.env with your values:
+# - MONGO_URI: Your MongoDB connection string
+# - JWT_SECRET: A secure random string
+# - GROQ_API_KEY: Your Groq API key
+# - CORS_ORIGIN: http://localhost:5173
+```
+
+**Frontend** (`frontend/.env`):
+```bash
+cp frontend/.env.example frontend/.env
+# Edit frontend/.env:
+# - VITE_API_URL: http://localhost:5001/api
+```
+
+### 3. Run Locally
+```bash
+# Terminal 1: Start backend
+cd backend && npm run dev
+
+# Terminal 2: Start frontend
+cd frontend && npm run dev
+```
+
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:5001
+- **Health Check**: http://localhost:5001/health
+
 ---
 
-### 4. Run Full Stack
+## Deployment
 
-Terminal 1 (Backend):
+### Backend → Render
 
-```bash
-cd backend
-npm run dev
-```
+1. **Create a new Web Service** on [Render](https://render.com)
+2. Connect your GitHub repository
+3. Configure:
+   - **Root Directory**: `backend`
+   - **Build Command**: `npm install`
+   - **Start Command**: `node server.js`
+   - **Health Check Path**: `/health`
+4. Add environment variables:
+   - `NODE_ENV`: `production`
+   - `PORT`: `10000`
+   - `MONGO_URI`: Your MongoDB Atlas URI
+   - `JWT_SECRET`: Secure random string
+   - `GROQ_API_KEY`: Your Groq API key
+   - `CORS_ORIGIN`: Your Vercel frontend URL
 
-Terminal 2 (Frontend):
+### Frontend → Vercel
 
-```bash
-cd frontend
-npm run dev
-```
+1. **Import project** on [Vercel](https://vercel.com)
+2. Connect your GitHub repository
+3. Configure:
+   - **Root Directory**: `frontend`
+   - **Framework Preset**: Vite
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+4. Add environment variable:
+   - `VITE_API_URL`: Your Render backend URL + `/api` (e.g., `https://skillproof-api.onrender.com/api`)
 
-Application runs at:
-
-```
-http://localhost:5173
-```
+### Production Checklist
+- [ ] MongoDB Atlas cluster configured with IP whitelist
+- [ ] Strong JWT_SECRET (use `openssl rand -hex 64`)
+- [ ] CORS_ORIGIN set to exact Vercel URL
+- [ ] All environment variables set in both platforms
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|------------|
-| POST | `/api/auth/register` | No | Register user |
-| POST | `/api/auth/login` | No | Login and receive JWT |
-| GET | `/api/auth/me` | Yes | Get current user |
-| POST | `/api/projects` | Yes | Submit project for AI evaluation |
-| GET | `/api/projects` | Yes | Get user projects |
-| GET | `/api/projects/:id` | Yes | Get project evaluation |
-| GET | `/api/leaderboard` | No | Global leaderboard |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| GET | `/api/health` | API health check |
+| GET | `/api/test` | Test endpoint |
+| POST | `/api/auth/register` | User registration |
+| POST | `/api/auth/login` | User login |
+| GET | `/api/projects` | List user projects |
+| POST | `/api/projects` | Add new project |
+| GET | `/api/profile/:slug` | Public profile |
+| GET | `/api/leaderboard` | Leaderboard |
 
 ---
 
-## Fix: MongoDB ECONNREFUSED / Connection Refused
+## Architecture
 
-If MongoDB Compass disconnects or shows:
+### Design Patterns Used
+- **Repository Pattern**: Centralized data access logic
+- **Dependency Inversion**: Services depend on repository abstractions
+- **Encapsulation**: Domain logic within model methods
+- **Singleton Pattern**: Services/repositories exported as singletons
 
-```
-ECONNREFUSED
-```
-
-It means `mongod` is not running on port `27017`.
-
-### Check if MongoDB is running
-
-```bash
-ps aux | grep mongod
-```
-
-### Check if port 27017 is active
-
-```bash
-netstat -an | grep 27017
-```
-
-If nothing appears, MongoDB is not running.
-
-### Start MongoDB
-
-```bash
-mongod --dbpath ~/mongodb-data
-```
-
-Replace `~/mongodb-data` with your actual data directory.
-
-### If MongoDB will not start
-
-Kill stuck processes:
-
-```bash
-pkill mongod
-```
-
-Then restart `mongod`.
-
-Once running on:
-
-```
-127.0.0.1:27017
-```
-
-MongoDB Compass should connect successfully.
+### Security Features
+- Helmet.js for HTTP headers
+- Rate limiting (auth, evaluation, general)
+- JWT authentication
+- Input validation with Zod
+- CORS with whitelist
 
 ---
 
-## Future Roadmap
+## Scripts
 
-- Redis caching for leaderboard endpoint
-- GitHub OAuth for one-click login
-- Stripe billing with usage-based quotas
+### Backend
+```bash
+npm run dev     # Development with nodemon
+npm start       # Production start
+npm run lint    # ESLint
+npm run format  # Prettier
+```
+
+### Frontend
+```bash
+npm run dev     # Development server
+npm run build   # Production build
+npm run preview # Preview production build
+```
 
 ---
 
-## Author
-
-Built using production-grade backend architecture and defensive LLM engineering principles.
+## License
+ISC

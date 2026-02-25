@@ -17,34 +17,19 @@ const Register = () => {
         setLoading(true);
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || "";
-            const response = await fetch(`${API_URL}/api/auth/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form),
-            });
-
-            const data = await response.json();
-
-            if (response.status === 409) {
-                setError("User already exists. Please login instead.");
-                return;
-            }
-
-            if (!response.ok) {
-                setError(data.message || "Registration failed. Please try again.");
-                return;
-            }
-
-            // Success case - the backend response already includes token and user in data.data
-            // We use the register function from context to handle the persistence/state
-            // But since we want the specific fetch-based error handling requested, 
-            // we'll just navigate to login if successful, or use the context method if it's simpler.
-            // To match the requested logic exactly:
-            setError("");
-            navigate("/login");
+            await register(form.name, form.email, form.password);
+            navigate("/dashboard");
         } catch (err) {
-            setError("Something went wrong. Please try again.");
+            if (err.response?.status === 409) {
+                setError("Email already registered. Please login instead.");
+            } else {
+                setError(
+                    err.response?.data?.error?.message ||
+                    err.response?.data?.message ||
+                    err.message ||
+                    "Registration failed. Please try again."
+                );
+            }
         } finally {
             setLoading(false);
         }
@@ -104,7 +89,7 @@ const Register = () => {
                         </div>
 
                         <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-                            {loading ? <><span className="spinner" style={{ width: 18, height: 18 }} /> Creating account…</> : "Create Account"}
+                            {loading ? <><span className="spinner" style={{ width: 18, height: 18 }} /> Creating account...</> : "Create Account"}
                         </button>
                     </form>
 

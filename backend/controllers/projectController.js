@@ -1,6 +1,6 @@
 const asyncHandler = require("../utils/asyncHandler");
 const responseHandler = require("../utils/responseHandler");
-const Project = require("../models/Project");
+const projectRepository = require("../repositories/projectRepository");
 const { runProjectEvaluation, formatEvaluationResult } = require("../services/projectService");
 const logger = require("../utils/logger");
 
@@ -9,7 +9,7 @@ exports.createProject = asyncHandler(async (req, res) => {
     const { title, githubUrl, description, techStack } = req.body;
 
     // Save project immediately with 'processing' status
-    const project = await Project.create({
+    const project = await projectRepository.create({
         user: req.user._id,
         title,
         githubUrl,
@@ -50,28 +50,14 @@ exports.createProject = asyncHandler(async (req, res) => {
 
 // ── GET /api/projects ─────────────────────────────────────────────────────────
 exports.getMyProjects = asyncHandler(async (req, res) => {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(20, parseInt(req.query.limit) || 10);
-    const skip = (page - 1) * limit;
+    const projects = await projectRepository.findByUserId(req.user._id);
 
-    const [projects, total] = await Promise.all([
-        Project.find({ user: req.user._id })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .select("-__v -evaluationHistory"),
-        Project.countDocuments({ user: req.user._id }),
-    ]);
-
-    return responseHandler.success(res, {
-        projects,
-        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
-    });
+    return responseHandler.success(res, { projects });
 });
 
 // ── GET /api/projects/:id ─────────────────────────────────────────────────────
 exports.getProjectById = asyncHandler(async (req, res) => {
-    const project = await Project.findById(req.params.id).select("-__v");
+    const project = await projectRepository.findById(req.params.id);
 
     if (!project) {
         return responseHandler.error(res, "Project not found", "NOT_FOUND", 404);

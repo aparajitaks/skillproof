@@ -112,8 +112,8 @@ const PublicProfile = () => {
             <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "24px" }}>
                 {[
                     { label: "Projects", value: evaluated.length, color: "var(--accent)" },
-                    { label: "Avg Score", value: avgScore > 0 ? `${avgScore}/10` : "—", color: "var(--accent)" },
-                    { label: "Top Score", value: topScore > 0 ? `${topScore}/10` : "—", color: "var(--success)" },
+                    { label: "Avg Score", value: avgScore > 0 ? `${avgScore}/9` : "—", color: "var(--accent)" },
+                    { label: "Top Score", value: topScore > 0 ? `${topScore}/9` : "—", color: "var(--success)" },
                 ].map(({ label, value, color }) => (
                     <div key={label} className="card" style={{ flex: 1, minWidth: "120px", textAlign: "center" }}>
                         <div style={{ fontSize: "1.7rem", fontWeight: 800, color }}>{value}</div>
@@ -192,3 +192,4 @@ const PublicProfile = () => {
 };
 
 export default PublicProfile;
+

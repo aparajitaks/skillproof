@@ -16,11 +16,14 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
-    // Helper: store token + user object from API response
-    // API now returns { success, token, user: { id, name, email, ... } }
-    const _persist = (data) => {
-        const token = data.token;
-        const userObj = data.user || data; // fallback for old shape
+    // Helper: store token + user from API response
+    // After interceptor unwrap, data = { success, token, user }
+    const _persist = (payload) => {
+        const token = payload.token;
+        const userObj = payload.user;
+        if (!token || !userObj) {
+            throw new Error("Invalid auth response from server");
+        }
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(USER_KEY, JSON.stringify(userObj));
         setUser(userObj);

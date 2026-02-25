@@ -14,16 +14,22 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
     (response) => {
-        if (response.data && response.data.success && response.data.data) {
-            return response.data;
+        // Backend wraps as { success, data: { ... } }
+        // Return the inner data so callers get the useful payload directly
+        if (response.data && response.data.success && response.data.data !== undefined) {
+            return { data: response.data.data };
         }
-        return response.data;
+        // Non-wrapped responses (shouldn't happen, but safe fallback)
+        return { data: response.data };
     },
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem("skillproof_token");
             localStorage.removeItem("skillproof_user");
-            window.location.href = "/login";
+            // Only redirect if not already on login/register
+            if (!window.location.pathname.startsWith("/login") && !window.location.pathname.startsWith("/register")) {
+                window.location.href = "/login";
+            }
         }
         return Promise.reject(error);
     }

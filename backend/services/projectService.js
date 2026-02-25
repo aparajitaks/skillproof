@@ -1,5 +1,5 @@
-const Project = require("../models/Project");
-const User = require("../models/User");
+const projectRepository = require("../repositories/projectRepository");
+const userRepository = require("../repositories/userRepository");
 const { evaluateProject: runAiEvaluation } = require("./aiService");
 const { fetchRepoContext } = require("./githubService");
 const { calculateFinalScore } = require("../utils/scoreCalculator");
@@ -7,7 +7,7 @@ const logger = require("../utils/logger");
 
 /**
  * Executes the full evaluation pipeline for a project
- * @param {Object} project - Mongoose project document
+ * @param {Object} project - Project data
  * @returns {Promise<{evaluation: Object, finalScore: number, status: string}>}
  */
 const runProjectEvaluation = async (project) => {
@@ -46,7 +46,7 @@ const formatEvaluationResult = async (project, evaluation, finalScore, status, u
 
     // Track AI token usage on user account
     if (evaluation.tokenUsage?.totalTokens) {
-        await User.findByIdAndUpdate(userId, {
+        await userRepository.update(userId, {
             $inc: { aiTokensUsed: evaluation.tokenUsage.totalTokens },
         });
     }

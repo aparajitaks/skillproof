@@ -37,4 +37,26 @@ const userSchema = new mongoose.Schema(
 // Note: email and publicProfileSlug already have indexes from `unique: true`
 // No explicit .index() needed — avoids duplicate index warnings in Mongoose
 
+/**
+ * User Methods for better encapsulation (OOP)
+ */
+userSchema.methods.isDeveloper = function() {
+    return this.role === 'developer';
+};
+
+userSchema.methods.isRecruiter = function() {
+    return this.role === 'recruiter';
+};
+
+userSchema.methods.isAdmin = function() {
+    return this.role === 'admin';
+};
+
+userSchema.methods.updateTokenUsage = function(tokens) {
+    this.aiTokensUsed += tokens;
+    // Basic cost calculation (e.g., $0.002 per 1k tokens)
+    this.aiCostUsd += (tokens / 1000) * 0.002;
+    return this.save();
+};
+
 module.exports = mongoose.model("User", userSchema);

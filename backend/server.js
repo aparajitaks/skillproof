@@ -28,12 +28,20 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 const corsOptions = {
   origin: function (origin, callback) {
+    // Allow server-to-server (no origin) e.g. health checks
     if (!origin) return callback(null, true);
 
+    // Allow explicitly listed origins
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
+    // Allow all localhost ports in development
+    if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow any *.vercel.app subdomain
     if (origin.endsWith(".vercel.app")) {
       return callback(null, true);
     }
@@ -45,6 +53,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Handle preflight for all routes explicitly
+app.options("/{*splat}", cors(corsOptions));
 
 connectDB();
 
@@ -98,6 +109,26 @@ app.get("/health", (req, res) => {
     uptime: Math.floor(process.uptime()),
     db: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
     env: process.env.NODE_ENV || "development",
+  });
+});
+
+// Also expose health at /api/health for consistency
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    db: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    env: process.env.NODE_ENV || "development",
+  });
+});
+
+// ── Test endpoint ─────────────────────────────────────────────────────────────
+app.get("/api/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "API is working correctly",
+    timestamp: new Date().toISOString(),
   });
 });
 

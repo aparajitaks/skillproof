@@ -98,9 +98,10 @@ const projectSchema = new mongoose.Schema(
             enum: ["pending", "processing", "evaluated", "failed"],
             default: "pending",
         },
-        isPublic: {
-            type: Boolean,
-            default: false,
+        visibility: {
+            type: String,
+            enum: ["public", "private"],
+            default: "public",
         },
 
         // ── Re-evaluation tracking ─────────────────────────────────────────────
@@ -121,5 +122,28 @@ projectSchema.index({ user: 1, createdAt: -1 });     // User's project list
 projectSchema.index({ finalScore: -1 });              // Leaderboard scoring
 projectSchema.index({ status: 1, finalScore: -1 });   // Leaderboard filter
 projectSchema.index({ createdAt: -1 });               // Global feed / recency
+
+/**
+ * Project Methods for better encapsulation (OOP)
+ */
+projectSchema.methods.isEvaluated = function() {
+    return this.status === 'evaluated';
+};
+
+projectSchema.methods.isProcessing = function() {
+    return this.status === 'processing';
+};
+
+projectSchema.methods.archiveCurrentEvaluation = function() {
+    if (this.evaluation && this.finalScore !== null) {
+        const version = this.evaluationHistory.length + 1;
+        this.evaluationHistory.push({
+            version,
+            finalScore: this.finalScore,
+            evaluation: this.evaluation,
+            archivedAt: new Date()
+        });
+    }
+};
 
 module.exports = mongoose.model("Project", projectSchema);
