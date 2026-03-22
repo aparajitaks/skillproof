@@ -1,6 +1,7 @@
 const asyncHandler = require("../utils/asyncHandler");
 const responseHandler = require("../utils/responseHandler");
 const projectRepository = require("../repositories/projectRepository");
+const Project = require("../models/Project");
 const { runProjectEvaluation, formatEvaluationResult } = require("../services/projectService");
 const logger = require("../utils/logger");
 

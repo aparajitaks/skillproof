@@ -1,7 +1,8 @@
 const Groq = require("groq-sdk");
 const logger = require("../utils/logger");
 
-const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groqApiKey = process.env.GROQ_API_KEY;
+const client = groqApiKey ? new Groq({ apiKey: groqApiKey }) : null;
 
 const TIMEOUT_MS = 30_000;
 
@@ -133,6 +134,11 @@ const evaluateProject = async ({ title, description, techStack, githubUrl }, git
 
     if (FORCE_FAILURE) {
         logger.warn("[aiService] 🧪 SIMULATE_AI_FAILURE=true — returning fallback");
+        return { ...FALLBACK_EVALUATION, githubAnalyzed: false };
+    }
+
+    if (!client) {
+        logger.warn("[aiService] GROQ_API_KEY missing — returning fallback evaluation");
         return { ...FALLBACK_EVALUATION, githubAnalyzed: false };
     }
 
