@@ -65,9 +65,9 @@ const AdminDashboard = () => {
         const load = async () => {
             try {
                 const [statsRes, usersRes, projectsRes] = await Promise.all([
-                    api.get("/admin/stats"),
-                    api.get("/admin/users?limit=20"),
-                    api.get("/admin/projects?limit=20"),
+                    api.get("/api/admin/stats"),
+                    api.get("/api/admin/users?limit=20"),
+                    api.get("/api/admin/projects?limit=20"),
                 ]);
                 setStats(statsRes.data.stats);
                 setUsers(usersRes.data.users || []);

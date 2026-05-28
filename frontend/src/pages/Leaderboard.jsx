@@ -18,7 +18,7 @@ const Leaderboard = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const { data } = await api.get("/leaderboard");
+                const { data } = await api.get("/api/leaderboard");
                 setEntries(data.leaderboard);
             } catch {
                 setError("Could not load leaderboard. Try again later.");

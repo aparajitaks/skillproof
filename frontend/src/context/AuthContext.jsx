@@ -31,12 +31,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     const login = useCallback(async (email, password) => {
-        const { data } = await api.post("/auth/login", { email, password });
+        const { data } = await api.post("/api/auth/login", { email, password });
         return _persist(data);
     }, []);
 
     const register = useCallback(async (name, email, password) => {
-        const { data } = await api.post("/auth/register", { name, email, password });
+        const { data } = await api.post("/api/auth/register", { name, email, password });
         return _persist(data);
     }, []);
 

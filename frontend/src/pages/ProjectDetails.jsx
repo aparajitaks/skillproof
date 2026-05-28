@@ -63,7 +63,7 @@ const ProjectDetails = () => {
         }
         const fetchProject = async () => {
             try {
-                const { data } = await api.get(`/projects/${id}`);
+                const { data } = await api.get(`/api/projects/${id}`);
                 setProject(data.project || data); // unwrap { success, project } shape
             } catch (err) {
                 setError(err.response?.data?.message || "Project not found.");

@@ -1,10 +1,10 @@
 import api from "./axios";
 
 export const getProjects = (params = {}) =>
-    api.get("/projects", { params });
+    api.get("/api/projects", { params });
 
 export const getProjectById = (id) =>
-    api.get(`/projects/${id}`);
+    api.get(`/api/projects/${id}`);
 
 export const createProject = (data) =>
-    api.post("/projects", data);
+    api.post("/api/projects", data);

@@ -29,7 +29,7 @@ const PublicProfile = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const { data } = await api.get(`/profile/${slug}`);
+                const { data } = await api.get(`/api/profile/${slug}`);
                 setProfile(data.user);
                 setProjects(data.projects);
             } catch (err) {

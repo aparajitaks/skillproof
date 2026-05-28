@@ -28,7 +28,7 @@ const Compare = () => {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const { data } = await api.get("/projects");
+                const { data } = await api.get("/api/projects");
                 const evaluated = data.projects.filter((p) => p.status === "evaluated");
                 setProjects(evaluated);
                 if (evaluated.length >= 1) setSelA(evaluated[0]._id);

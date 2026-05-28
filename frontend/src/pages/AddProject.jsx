@@ -32,7 +32,7 @@ const AddProject = () => {
         };
 
         try {
-            const { data } = await api.post("/projects", payload);
+            const { data } = await api.post("/api/projects", payload);
             toast.success("Project submitted successfully!");
             // Backend returns { success, project } — extract the nested id
             const projectId = data.project?._id ?? data._id;
